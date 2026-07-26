@@ -753,3 +753,207 @@ font-weight:700;
 }
 
 */
+/**********************************************************************
+ * Player Picker
+ **********************************************************************/
+
+function createPlayerPicker(players) {
+
+    return new Promise(resolve => {
+
+        const overlay = document.createElement("div");
+        overlay.className = "scoutcard-picker-overlay";
+
+        const box = document.createElement("div");
+        box.className = "scoutcard-picker";
+
+        const title = document.createElement("div");
+        title.className = "scoutcard-picker-title";
+        title.textContent = "Select player";
+
+        const list = document.createElement("div");
+        list.className = "scoutcard-picker-list";
+
+        players.forEach(player => {
+
+            const row = document.createElement("div");
+            row.className = "scoutcard-picker-row";
+
+            const avatar = document.createElement("img");
+            avatar.className = "scoutcard-picker-avatar";
+            avatar.src = player.avatarUrl || "";
+
+            avatar.onerror = function () {
+
+                this.style.visibility = "hidden";
+
+            };
+
+            const info = document.createElement("div");
+            info.className = "scoutcard-picker-info";
+
+            const name = document.createElement("div");
+            name.className = "scoutcard-picker-name";
+            name.textContent = player.display_name;
+
+            const details = document.createElement("div");
+            details.className = "scoutcard-picker-details";
+
+            details.textContent =
+                `${club(player)} • ${position(player)} • L10 ${last10(player)}`;
+
+            info.appendChild(name);
+            info.appendChild(details);
+
+            row.appendChild(avatar);
+            row.appendChild(info);
+
+            row.onclick = () => {
+
+                overlay.remove();
+
+                resolve(player);
+
+            };
+
+            list.appendChild(row);
+
+        });
+
+        overlay.onclick = e => {
+
+            if (e.target === overlay) {
+
+                overlay.remove();
+
+                resolve(null);
+
+            }
+
+        };
+
+        box.appendChild(title);
+        box.appendChild(list);
+
+        overlay.appendChild(box);
+
+        document.body.appendChild(overlay);
+
+    });
+
+}
+
+/**********************************************************************
+ * Replace searchSorare() ending
+ **********************************************************************/
+
+/*
+
+const hits = json.results?.[0]?.hits ?? [];
+
+if (!hits.length) {
+
+    return [];
+
+}
+
+if (hits.length === 1) {
+
+    return hits;
+
+}
+
+const selected = await createPlayerPicker(hits);
+
+return selected ? [selected] : [];
+
+*/
+
+/**********************************************************************
+ * Picker CSS
+ *
+ * Add inside GM_addStyle()
+ **********************************************************************/
+
+/*
+
+.scoutcard-picker-overlay{
+
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.45);
+display:flex;
+align-items:center;
+justify-content:center;
+z-index:2147483647;
+
+}
+
+.scoutcard-picker{
+
+width:520px;
+max-width:90vw;
+max-height:80vh;
+overflow:auto;
+
+background:#1b1d22;
+border-radius:14px;
+box-shadow:0 20px 60px rgba(0,0,0,.45);
+
+}
+
+.scoutcard-picker-title{
+
+padding:16px;
+font-size:18px;
+font-weight:700;
+border-bottom:1px solid #333;
+
+}
+
+.scoutcard-picker-row{
+
+display:flex;
+gap:14px;
+padding:14px 18px;
+cursor:pointer;
+transition:.15s;
+
+}
+
+.scoutcard-picker-row:hover{
+
+background:#2b2f36;
+
+}
+
+.scoutcard-picker-avatar{
+
+width:44px;
+height:44px;
+border-radius:50%;
+object-fit:cover;
+
+}
+
+.scoutcard-picker-info{
+
+flex:1;
+
+}
+
+.scoutcard-picker-name{
+
+font-weight:700;
+
+}
+
+.scoutcard-picker-details{
+
+margin-top:4px;
+font-size:12px;
+opacity:.75;
+
+}
+
+*/
