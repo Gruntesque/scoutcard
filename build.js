@@ -1,7 +1,7 @@
+import { build } from "esbuild";
 import fs from "node:fs";
-import path from "node:path";
 
-const HEADER = `// ==UserScript==
+const banner = `// ==UserScript==
 // @name         ScoutCard
 // @namespace    https://github.com/Gruntesque/scoutcard
 // @version      0.1.0
@@ -14,93 +14,37 @@ const HEADER = `// ==UserScript==
 
 `;
 
-const ORDER = [
+await build({
 
-    "src/config.js",
+    entryPoints: [
 
-    "src/cache.js",
+        "src/main.js"
 
-    "src/queue.js",
+    ],
 
-    "src/utils/text.js",
+    bundle: true,
 
-    "src/utils/dom.js",
+    format: "iife",
 
-    "src/providers/sorare.js",
+    outfile: "dist/scoutcard.user.js",
 
-    "src/providers/index.js",
+    banner: {
 
-    "src/tooltip.js",
+        js: banner
 
-    "src/selection.js",
+    },
 
-    "src/app.js"
+    target: "es2022",
 
-];
+    minify: false
 
-function stripImports(code) {
+});
 
-    return code
+const file = fs.readFileSync(
 
-        .replace(/^import .*$/gm, "")
+    "dist/scoutcard.user.js",
 
-        .replace(/^export default .*$/gm, "")
-
-        .replace(/^export /gm, "");
-
-}
-
-let output = HEADER;
-
-output += "\n(() => {\n\n";
-
-for (const file of ORDER) {
-
-    console.log("Building:", file);
-
-    const code = fs.readFileSync(
-
-        path.resolve(file),
-
-        "utf8"
-
-    );
-
-    output +=
-
-`\n/* ======================================================
-
-${file}
-
-====================================================== */
-
-`;
-
-    output += stripImports(code);
-
-    output += "\n";
-
-}
-
-output += `
-
-const scoutcard = new ScoutCard();
-
-scoutcard.start();
-
-`;
-
-output += "\n})();\n";
-
-fs.mkdirSync(
-
-    "dist",
-
-    {
-
-        recursive: true
-
-    }
+    "utf8"
 
 );
 
@@ -108,7 +52,7 @@ fs.writeFileSync(
 
     "dist/scoutcard.user.js",
 
-    output,
+    file,
 
     "utf8"
 
@@ -116,6 +60,4 @@ fs.writeFileSync(
 
 console.log("");
 
-console.log("✔ Build complete.");
-
-console.log("dist/scoutcard.user.js");
+console.log("✔ ScoutCard built successfully.");
