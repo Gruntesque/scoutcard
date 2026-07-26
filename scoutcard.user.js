@@ -201,40 +201,183 @@
         return text.length >= 3;
     }
 
-    async function fetchPlayerData(name) {
-        const key = normalizeName(name);
+/**********************************************************************
+ * Sorare Provider
+ **********************************************************************/
 
-        const cached = Cache.get(key);
+const SORARE_API =
+    "https://7z0z8pasdy-dsn.algolia.net/1/indexes/*/queries?x-algolia-application-id=7Z0Z8PASDY&x-algolia-api-key=30fdac6793afa5b820c36e7202e4b872";
 
-        if (cached) {
-            return cached;
-        }
+function club(player) {
+    return player.active_club?.name ||
+        player.activeClub?.name ||
+        "-";
+}
 
-        const result = await RequestQueue.enqueue(async () => {
-            return {
-                name,
-                status: 'pending',
-                source: null,
-                updatedAt: Date.now()
-            };
-        });
+function position(player) {
 
-        Cache.set(key, result);
+    const p =
+        player.position ||
+        player.positions?.[0] ||
+        "-";
 
-        return result;
+    switch (p) {
+
+        case "Goalkeeper":
+            return "GK";
+
+        case "Defender":
+            return "DEF";
+
+        case "Midfielder":
+            return "MID";
+
+        case "Forward":
+            return "FWD";
+
+        default:
+            return p;
+
     }
 
-    function buildCard(data) {
-        return `
-            <div class="scoutcard-header">
-                <div class="scoutcard-name">${data.name}</div>
-                <div class="scoutcard-status">${data.status}</div>
-            </div>
-            <div class="scoutcard-body">
-                Loading...
-            </div>
-        `;
+}
+
+function last10(player) {
+    return player.status?.last_ten_played_so5_average_score ?? "-";
+}
+
+async function searchSorare(name) {
+
+    const response = await fetch(SORARE_API, {
+
+        method: "POST",
+
+        headers: {
+            "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+
+            requests: [{
+
+                indexName: "Player",
+
+                params:
+                    "allowTyposOnNumericTokens=false" +
+                    "&filters=sport:football" +
+                    "&hitsPerPage=5" +
+                    "&query=" +
+                    encodeURIComponent(name)
+
+            }]
+
+        })
+
+    });
+
+    if (!response.ok) {
+        throw new Error("Sorare request failed.");
     }
+
+    const json = await response.json();
+
+    return json.results?.[0]?.hits ?? [];
+
+}
+
+async function fetchPlayerData(name) {
+
+    const key = normalizeName(name);
+
+    const cached = Cache.get(key);
+
+    if (cached) {
+        return cached;
+    }
+
+    const hits = await RequestQueue.enqueue(() =>
+        searchSorare(name)
+    );
+
+    let result;
+
+    if (!hits.length) {
+
+        result = {
+            name,
+            status: "Not found",
+            source: "Sorare"
+        };
+
+    } else {
+
+        const player = hits[0];
+
+        result = {
+
+            name: player.display_name,
+
+            club: club(player),
+
+            position: position(player),
+
+            l10: last10(player),
+
+            avatar: player.avatarUrl,
+
+            status: "OK",
+
+            source: "Sorare",
+
+            updatedAt: Date.now()
+
+        };
+
+    }
+
+    Cache.set(key, result);
+
+    return result;
+
+}
+
+function buildCard(data) {
+
+    return `
+
+<div class="scoutcard-header">
+
+    <div>
+
+        <div class="scoutcard-name">
+
+            ${data.name}
+
+        </div>
+
+        <div class="scoutcard-status">
+
+            ${data.club || ""}
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="scoutcard-body">
+
+    <div><strong>Position:</strong> ${data.position || "-"}</div>
+
+    <div><strong>L10:</strong> ${data.l10 ?? "-"}</div>
+
+    <div><strong>Source:</strong> ${data.source}</div>
+
+</div>
+
+`;
+
+}
 
     async function handleHover(event) {
         const target = event.target.closest('a,[data-player],[data-player-name]');
