@@ -957,3 +957,217 @@ opacity:.75;
 }
 
 */
+/**********************************************************************
+ * Persistent Cache (localStorage)
+ **********************************************************************/
+
+const CACHE_KEY = "scoutcard-cache-v1";
+
+function loadPersistentCache() {
+
+    try {
+
+        const raw = localStorage.getItem(CACHE_KEY);
+
+        if (!raw) return;
+
+        const data = JSON.parse(raw);
+
+        State.cache = new Map(data);
+
+    }
+
+    catch (e) {
+
+        console.warn("[ScoutCard] Cache load failed.", e);
+
+    }
+
+}
+
+function savePersistentCache() {
+
+    try {
+
+        localStorage.setItem(
+
+            CACHE_KEY,
+
+            JSON.stringify(
+
+                [...State.cache.entries()]
+
+            )
+
+        );
+
+    }
+
+    catch (e) {
+
+        console.warn("[ScoutCard] Cache save failed.", e);
+
+    }
+
+}
+
+const CacheSet = Cache.set;
+
+Cache.set = function (key, value) {
+
+    CacheSet.call(Cache, key, value);
+
+    savePersistentCache();
+
+};
+
+const CacheClear = Cache.clear;
+
+Cache.clear = function () {
+
+    CacheClear.call(Cache);
+
+    savePersistentCache();
+
+};
+
+/**********************************************************************
+ * Loading Card
+ **********************************************************************/
+
+function showLoadingCard(name, x, y) {
+
+    tooltip.show(
+
+        x,
+
+        y,
+
+        `
+
+<div class="scoutcard-top">
+
+<div class="scoutcard-info">
+
+<div class="scoutcard-name">
+
+${name}
+
+</div>
+
+<div class="scoutcard-club">
+
+Searching...
+
+</div>
+
+</div>
+
+</div>
+
+`
+
+    );
+
+}
+
+/**********************************************************************
+ * Replace handleSelection()
+ **********************************************************************/
+
+/*
+
+async function handleSelection(event) {
+
+    clearTimeout(Selection.timer);
+
+    Selection.timer = setTimeout(async () => {
+
+        const text = getSelectedText();
+
+        if (!text) return;
+
+        if (text === Selection.lastText) return;
+
+        Selection.lastText = text;
+
+        showLoadingCard(
+            text,
+            event.pageX + 16,
+            event.pageY + 16
+        );
+
+        try {
+
+            const data =
+                await fetchPlayerData(text);
+
+            tooltip.show(
+                event.pageX + 16,
+                event.pageY + 16,
+                buildCard(data)
+            );
+
+        }
+
+        catch(e){
+
+            tooltip.show(
+
+                event.pageX + 16,
+
+                event.pageY + 16,
+
+                "<b>Search failed.</b>"
+
+            );
+
+            console.error(e);
+
+        }
+
+    },150);
+
+}
+
+*/
+
+/**********************************************************************
+ * init()
+ **********************************************************************/
+
+/*
+
+loadPersistentCache();
+
+*/
+
+/**********************************************************************
+ * Debug helpers
+ **********************************************************************/
+
+window.ScoutCard = {
+
+    version: VERSION,
+
+    cache: State.cache,
+
+    clearCache() {
+
+        Cache.clear();
+
+        console.log("[ScoutCard] Cache cleared.");
+
+    },
+
+    dumpCache() {
+
+        console.table(
+
+            [...State.cache.values()]
+
+        );
+
+    }
+
+};
