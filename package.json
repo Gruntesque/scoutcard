@@ -1,0 +1,18 @@
+{
+  "name": "scoutcard",
+  "version": "0.1.0",
+  "description": "ScoutCard - Football player popup for Sorare, Transfermarkt and other sources",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "keywords": [
+    "tampermonkey",
+    "userscript",
+    "sorare",
+    "transfermarkt",
+    "football"
+  ],
+  "license": "MIT"
+}
