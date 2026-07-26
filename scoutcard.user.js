@@ -1171,3 +1171,211 @@ window.ScoutCard = {
     }
 
 };
+/**********************************************************************
+ * Transfermarkt Provider (placeholder)
+ *
+ * Primeira integração. Ainda não faz scraping; prepara a estrutura
+ * para a próxima etapa.
+ **********************************************************************/
+
+const Transfermarkt = {
+
+    async search(name) {
+
+        return {
+
+            found: false,
+
+            name,
+
+            marketValue: null,
+
+            age: null,
+
+            club: null,
+
+            position: null,
+
+            profileUrl: null
+
+        };
+
+    }
+
+};
+
+/**********************************************************************
+ * Merge providers
+ **********************************************************************/
+
+async function fetchPlayerData(name) {
+
+    const key = normalizeName(name);
+
+    const cached = Cache.get(key);
+
+    if (cached) {
+
+        return cached;
+
+    }
+
+    const hits = await RequestQueue.enqueue(() =>
+        searchSorare(name)
+    );
+
+    let result;
+
+    if (!hits.length) {
+
+        result = {
+
+            name,
+
+            status: "Not found",
+
+            source: "Sorare"
+
+        };
+
+    } else {
+
+        const player = hits[0];
+
+        const tm =
+            await Transfermarkt.search(
+                player.display_name
+            );
+
+        result = {
+
+            name: player.display_name,
+
+            club: tm.club || club(player),
+
+            position: tm.position || position(player),
+
+            age: tm.age,
+
+            marketValue: tm.marketValue,
+
+            avatar: player.avatarUrl,
+
+            l10: last10(player),
+
+            source: "Sorare",
+
+            updatedAt: Date.now()
+
+        };
+
+    }
+
+    Cache.set(key, result);
+
+    return result;
+
+}
+
+/**********************************************************************
+ * Replace buildCard()
+ **********************************************************************/
+
+/*
+
+function buildCard(data){
+
+return `
+
+<div class="scoutcard-top">
+
+${data.avatar
+? `<img class="scoutcard-avatar" src="${data.avatar}">`
+: `<div class="scoutcard-avatar scoutcard-avatar-placeholder"></div>`}
+
+<div class="scoutcard-info">
+
+<div class="scoutcard-name">
+
+${data.name}
+
+</div>
+
+<div class="scoutcard-club">
+
+${data.club || "-"}
+
+</div>
+
+<div class="scoutcard-position">
+
+${[
+data.position,
+data.age ? data.age + " yrs" : ""
+].filter(Boolean).join(" • ")}
+
+</div>
+
+</div>
+
+</div>
+
+<div class="scoutcard-divider"></div>
+
+<div class="scoutcard-row">
+
+<div class="scoutcard-stat">
+
+<div class="scoutcard-label">
+
+L10
+
+</div>
+
+<div class="scoutcard-value">
+
+${data.l10 ?? "-"}
+
+</div>
+
+</div>
+
+<div class="scoutcard-stat">
+
+<div class="scoutcard-label">
+
+Market Value
+
+</div>
+
+<div class="scoutcard-value">
+
+${data.marketValue || "-"}
+
+</div>
+
+</div>
+
+</div>
+
+`;
+
+}
+
+*/
+
+/**********************************************************************
+ * Future hooks
+ **********************************************************************/
+
+async function enrichTransfermarkt(player){
+
+    return player;
+
+}
+
+async function enrichSorare(player){
+
+    return player;
+
+}
