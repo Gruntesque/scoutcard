@@ -1,75 +1,84 @@
 /**
  * ScoutCard
- * Provider Manager
+ * Providers
  */
 
 import Sorare from "./sorare.js";
+import getTransfermarktData from "./transfermarkt/index.js";
 
-const providers = [
+export async function getPlayerData(name) {
 
-    Sorare
+    console.log("[ScoutCard] Searching:", name);
 
-];
+    const [
 
-export function register(provider) {
+        sorareResult,
 
-    providers.push(provider);
+        transfermarktResult
 
-}
+    ] = await Promise.allSettled([
 
-export function getProviders() {
+        Sorare.search(name),
 
-    return [...providers];
+        getTransfermarktData(name)
 
-}
+    ]);
 
-export async function searchPlayer(name) {
+    let sorare = null;
+    let transfermarkt = null;
 
-    const results = [];
+    if (sorareResult.status === "fulfilled") {
 
-    for (const provider of providers) {
+        sorare = sorareResult.value;
 
-        try {
-
-            const players =
-                await provider.search(name);
-
-            if (players?.length) {
-
-                results.push(
-
-                    ...players
-
-                );
-
-            }
-
-        }
-
-        catch (error) {
-
-            console.error(
-
-                `[ScoutCard] ${provider.name}`,
-
-                error
-
-            );
-
-        }
+        console.log(
+            "[ScoutCard] Sorare:",
+            sorare
+        );
 
     }
 
-    return results;
+    else {
+
+        console.error(
+            "[ScoutCard] Sorare failed",
+            sorareResult.reason
+        );
+
+    }
+
+    if (transfermarktResult.status === "fulfilled") {
+
+        transfermarkt = transfermarktResult.value;
+
+        console.log(
+            "[ScoutCard] Transfermarkt:",
+            transfermarkt
+        );
+
+    }
+
+    else {
+
+        console.error(
+            "[ScoutCard] Transfermarkt failed",
+            transfermarktResult.reason
+        );
+
+    }
+
+    return {
+
+        sorare:
+
+            sorare?.[0] ??
+
+            null,
+
+        transfermarkt
+
+    };
 
 }
 
-export default {
-
-    register,
-
-    getProviders,
-
-    searchPlayer
-
-};
+export default getPlayerData;

@@ -3,163 +3,124 @@
  * Main application
  */
 
-import { Cache } from "./cache.js";
-import { RequestQueue } from "./queue.js";
-import { Tooltip } from "./tooltip.js";
-import { SelectionManager } from "./selection.js";
-import { searchPlayer } from "./providers/index.js";
+import Tooltip from "./tooltip.js";
+import getPlayerData from "./providers/index.js";
 
-export class ScoutCard {
+export default class ScoutCard {
 
     constructor() {
 
-        this.cache = new Cache();
-
-        this.queue = new RequestQueue();
-
         this.tooltip = new Tooltip();
 
-        this.selection = new SelectionManager(
+        this.currentSelection = "";
 
-            this.handleSelection.bind(this)
+        this.timer = null;
 
-        );
+        this.requestId = 0;
 
     }
 
     start() {
 
-        console.log("[ScoutCard] Started.");
+        document.addEventListener(
 
-        this.selection.start();
+            "mouseup",
 
-    }
+            () => this.onSelection(),
 
-    stop() {
+            true
 
-        this.selection.stop();
-
-        this.tooltip.hide();
-
-        console.log("[ScoutCard] Stopped.");
+        );
 
     }
 
-    async handleSelection(selection) {
+    onSelection() {
 
-        const key = selection.text.toLowerCase();
+        clearTimeout(this.timer);
 
-        let players = this.cache.get(key);
+        this.timer = setTimeout(
 
-        if (!players) {
+            () => this.loadSelection(),
 
-            players = await this.queue.add(() =>
+            150
 
-                searchPlayer(selection.text)
+        );
 
-            );
+    }
 
-            this.cache.set(
+    async loadSelection() {
 
-                key,
+        const text = window
+            .getSelection()
+            .toString()
+            .trim();
 
-                players
+        if (text.length < 3) {
 
-            );
-
-        }
-
-        if (!players.length) {
-
-            this.tooltip.setHTML(`
-
-                <b>${selection.text}</b><br><br>
-
-                No player found.
-
-            `);
-
-            this.tooltip.show(
-
-                selection.x,
-
-                selection.y
-
-            );
+            this.tooltip.hide();
 
             return;
 
         }
 
-        const player = players[0];
+        if (text === this.currentSelection) {
+            return;
+        }
 
-        this.tooltip.setHTML(
+        this.currentSelection = text;
 
-            this.renderPlayer(player)
+        const requestId = ++this.requestId;
 
-        );
+        console.log("");
 
-        this.tooltip.show(
+        console.log("==============================");
 
-            selection.x,
+        console.log("[ScoutCard] Selection:", text);
 
-            selection.y
+        console.time("[ScoutCard] Total");
 
-        );
+        this.tooltip.showLoading(text);
 
-    }
+        try {
 
-    renderPlayer(player) {
+            console.time("[ScoutCard] Providers");
 
-        return `
+            const player = await getPlayerData(text);
 
-<div style="display:flex;gap:12px;align-items:center;">
+            console.timeEnd("[ScoutCard] Providers");
 
-    <img
-        src="${player.avatar || ""}"
-        style="
-            width:56px;
-            height:56px;
-            border-radius:50%;
-            object-fit:cover;
-            background:#333;
-        "
-    >
+            if (requestId !== this.requestId) {
 
-    <div>
+                console.log(
+                    "[ScoutCard] Ignoring stale request."
+                );
 
-        <div style="font-size:16px;font-weight:700;">
+                return;
 
-            ${player.name}
+            }
 
-        </div>
+            console.time("[ScoutCard] Render");
 
-        <div>
+            this.tooltip.show(player);
 
-            ${player.club || "-"}
+            console.timeEnd("[ScoutCard] Render");
 
-        </div>
+        }
 
-        <div>
+        catch (error) {
 
-            ${player.position || "-"}
+            console.error(error);
 
-        </div>
+            this.tooltip.showError(error.message);
 
-        <div>
+        }
 
-            L10: ${player.l10 ?? "-"}
+        finally {
 
-        </div>
+            console.timeEnd("[ScoutCard] Total");
 
-    </div>
-
-</div>
-
-`;
+        }
 
     }
 
 }
-
-export default ScoutCard;

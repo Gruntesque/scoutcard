@@ -8,7 +8,14 @@ const banner = `// ==UserScript==
 // @description  Universal football player popup
 // @author       Gruntesque
 // @match        *://*/*
-// @grant        none
+
+// @grant        GM_xmlhttpRequest
+
+// @connect      tmapi.transfermarkt.technology
+// @connect      www.transfermarkt.com
+// @connect      transfermarkt.com
+// @connect      7z0z8pasdy-dsn.algolia.net
+
 // @run-at       document-end
 // ==/UserScript==
 

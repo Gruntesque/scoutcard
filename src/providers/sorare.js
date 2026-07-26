@@ -1,100 +1,19 @@
 /**
  * ScoutCard
- * Sorare Provider
+ * Sorare provider
  */
 
 import { API } from "../config.js";
+import http from "../http.js";
+import Player from "../models/player.js";
 
-const SEARCH_URL = API.sorare.search;
+async function search(query) {
 
-function club(player) {
+    const json = await http.postJSON(
 
-    return player.active_club?.name ||
+        API.sorare.search,
 
-        player.activeClub?.name ||
-
-        "-";
-
-}
-
-function position(player) {
-
-    const value =
-
-        player.position ||
-
-        player.positions?.[0] ||
-
-        "-";
-
-    switch (value) {
-
-        case "Goalkeeper":
-            return "GK";
-
-        case "Defender":
-            return "DEF";
-
-        case "Midfielder":
-            return "MID";
-
-        case "Forward":
-            return "FWD";
-
-        default:
-            return value;
-
-    }
-
-}
-
-function last10(player) {
-
-    return player.status?.last_ten_played_so5_average_score ?? null;
-
-}
-
-function buildPlayer(player) {
-
-    return {
-
-        id: player.objectID,
-
-        source: "sorare",
-
-        name: player.display_name,
-
-        slug: player.slug,
-
-        avatar: player.avatarUrl,
-
-        nationality: player.country?.code || null,
-
-        club: club(player),
-
-        position: position(player),
-
-        l10: last10(player),
-
-        raw: player
-
-    };
-
-}
-
-export async function search(name, limit = 10) {
-
-    const response = await fetch(SEARCH_URL, {
-
-        method: "POST",
-
-        headers: {
-
-            "Content-Type": "application/json"
-
-        },
-
-        body: JSON.stringify({
+        JSON.stringify({
 
             requests: [
 
@@ -108,46 +27,48 @@ export async function search(name, limit = 10) {
 
                         "&filters=sport:football" +
 
-                        "&hitsPerPage=" + limit +
+                        "&hitsPerPage=10" +
 
                         "&query=" +
 
-                        encodeURIComponent(name)
+                        encodeURIComponent(query)
 
                 }
 
             ]
 
-        })
+        }),
 
-    });
+        {
 
-    if (!response.ok) {
+            headers: {
 
-        throw new Error(
+                "Content-Type": "application/json"
 
-            "Sorare request failed."
+            }
 
-        );
+        }
 
-    }
-
-    const json = await response.json();
+    );
 
     const hits =
 
-        json.results?.[0]?.hits ||
+        json.results?.[0]?.hits ?? [];
 
-        [];
+    return hits.map(
 
-    return hits.map(buildPlayer);
+        hit => Player.fromSorare(hit)
+
+    );
 
 }
 
-export default {
+const Sorare = {
 
     name: "Sorare",
 
     search
 
 };
+
+export default Sorare;

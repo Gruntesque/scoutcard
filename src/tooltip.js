@@ -3,143 +3,267 @@
  * Tooltip
  */
 
-import { CONFIG } from "./config.js";
-import { injectStyle } from "./utils/dom.js";
+function isGoalkeeper(player) {
 
-const STYLE_ID = "scoutcard-tooltip-style";
+    const tm = player?.transfermarkt;
 
-const CSS = `
+    if (!tm) {
+        return false;
+    }
 
-.scoutcard-tooltip{
+    return tm.positions?.some(position => {
 
-    position:fixed;
+        const name = (
+            position.name ||
+            position.shortName ||
+            ""
+        ).toLowerCase();
 
-    z-index:2147483647;
+        return (
+            name.includes("goalkeeper") ||
+            name.includes("keeper") ||
+            name === "gk" ||
+            name === "gol"
+        );
 
-    min-width:280px;
-
-    max-width:420px;
-
-    background:#18191d;
-
-    color:#fff;
-
-    border:1px solid #2e3138;
-
-    border-radius:12px;
-
-    box-shadow:0 12px 40px rgba(0,0,0,.45);
-
-    font-family:system-ui,sans-serif;
-
-    font-size:13px;
-
-    opacity:0;
-
-    pointer-events:none;
-
-    transition:opacity .12s ease;
+    });
 
 }
 
-.scoutcard-tooltip.visible{
+function renderPerformance(player) {
 
-    opacity:1;
+    const tm = player?.transfermarkt;
 
-}
+    const rows = tm?.performance ?? [];
 
-.scoutcard-tooltip-content{
+    const goalkeeper = isGoalkeeper(player);
 
-    padding:14px;
+    const headers = goalkeeper
+        ? `
+            <th>Temp.</th>
+            <th>Clube</th>
+            <th>J</th>
+            <th>Min</th>
+            <th>GS</th>
+            <th>SG</th>
+        `
+        : `
+            <th>Temp.</th>
+            <th>Clube</th>
+            <th>J</th>
+            <th>Min</th>
+            <th>G</th>
+            <th>A</th>
+        `;
 
-}
+    const body = rows.map(row => {
 
+        if (goalkeeper) {
+
+            return `
+<tr>
+<td>${row.season}</td>
+<td>${row.club?.shortName ?? "-"}</td>
+<td align="center">${row.appearances}</td>
+<td align="center">${row.minutes}</td>
+<td align="center">${row.goalsConceded}</td>
+<td align="center">${row.cleanSheets}</td>
+</tr>
 `;
 
-export class Tooltip {
+        }
+
+        return `
+<tr>
+<td>${row.season}</td>
+<td>${row.club?.shortName ?? "-"}</td>
+<td align="center">${row.appearances}</td>
+<td align="center">${row.minutes}</td>
+<td align="center">${row.goals}</td>
+<td align="center">${row.assists}</td>
+</tr>
+`;
+
+    }).join("");
+
+    return `
+<table style="width:100%;font-size:12px;">
+<thead>
+<tr>
+${headers}
+</tr>
+</thead>
+<tbody>
+${body}
+</tbody>
+</table>
+`;
+
+}
+
+export default class Tooltip {
 
     constructor() {
 
-        injectStyle(
+        this.element = document.createElement("div");
 
-            STYLE_ID,
+        this.element.id = "scoutcard-tooltip";
 
-            CSS
+        Object.assign(this.element.style, {
 
-        );
+            position: "fixed",
 
-        this.element =
-            document.createElement("div");
+            top: "20px",
 
-        this.element.className =
-            "scoutcard-tooltip";
+            right: "20px",
 
-        this.content =
-            document.createElement("div");
+            zIndex: 999999,
 
-        this.content.className =
-            "scoutcard-tooltip-content";
+            width: "620px",
 
-        this.element.appendChild(
+            maxWidth: "90vw",
 
-            this.content
+            background: "#1f2937",
 
-        );
+            color: "#fff",
 
-        document.body.appendChild(
+            borderRadius: "8px",
 
-            this.element
+            padding: "12px 14px",
 
-        );
+            fontFamily: "Arial, sans-serif",
 
-    }
+            fontSize: "13px",
 
-    setHTML(html){
+            lineHeight: "1.4",
 
-        this.content.innerHTML = html;
+            boxShadow: "0 8px 24px rgba(0,0,0,.35)",
 
-    }
+            display: "none"
 
-    show(x,y){
+        });
 
-        this.move(x,y);
-
-        this.element.classList.add(
-
-            "visible"
-
-        );
+        document.body.appendChild(this.element);
 
     }
 
-    hide(){
+    hide() {
 
-        this.element.classList.remove(
-
-            "visible"
-
-        );
+        this.element.style.display = "none";
 
     }
 
-    move(x,y){
+    showLoading(name) {
 
-        this.element.style.left =
+        this.element.style.display = "block";
 
-            (x + CONFIG.popupOffsetX) + "px";
-
-        this.element.style.top =
-
-            (y + CONFIG.popupOffsetY) + "px";
+        this.element.innerHTML = `
+<strong>${name}</strong><br>
+Loading...
+`;
 
     }
 
-    destroy(){
+    showError(message) {
 
-        this.element.remove();
+        this.element.style.display = "block";
+
+        this.element.innerHTML = `
+<strong>ScoutCard</strong><br>
+${message}
+`;
+
+    }
+
+    show(player) {
+
+        const sorare = player?.sorare;
+        const tm = player?.transfermarkt;
+
+        this.element.style.display = "block";
+
+        this.element.innerHTML = `
+
+<div style="display:flex;gap:18px;">
+
+${tm?.photo ? `
+<img
+src="${tm.photo}"
+style="
+width:150px;
+height:150px;
+object-fit:cover;
+border-radius:8px;
+">
+` : ""}
+
+<div style="flex:1">
+
+<div style="font-size:24px;font-weight:bold;">
+${tm?.name ?? "-"}
+</div>
+
+<div style="font-size:18px;">
+${tm?.marketValue ?? "-"}
+</div>
+
+<div style="font-size:16px;">
+${tm?.age ?? "-"} anos ·
+${tm?.height ?? "-"} ·
+${tm?.foot ?? "-"}
+</div>
+
+<div style="font-size:16px;">
+Contrato:
+${tm?.contractUntil ?? "-"}
+</div>
+
+</div>
+
+</div>
+
+<hr>
+
+<table style="width:100%">
+
+<tr>
+
+<td><strong>Sorare:</strong></td>
+<td>${sorare?.position ?? "-"}</td>
+
+<td><strong>L5:</strong></td>
+<td>${sorare?.l5 ?? "-"}</td>
+
+<td><strong>L10:</strong></td>
+<td>${sorare?.l10 ?? "-"}</td>
+
+<td><strong>L40:</strong></td>
+<td>${sorare?.l40 ?? "-"}</td>
+
+</tr>
+
+<tr>
+
+<td><strong>TM:</strong></td>
+
+<td colspan="7">
+
+${tm?.positions?.map(
+p => p.shortName
+).join(" • ") ?? "-"}
+
+</td>
+
+</tr>
+
+</table>
+
+<hr>
+
+${renderPerformance(player)}
+
+`;
 
     }
 
 }
-
-export default Tooltip;
