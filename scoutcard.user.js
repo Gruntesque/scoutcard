@@ -478,3 +478,278 @@ function buildCard(data) {
     init();
 
 })();
+/**********************************************************************
+ * Selection Mode
+ **********************************************************************/
+
+const Selection = {
+
+    lastText: "",
+
+    timer: null
+
+};
+
+function getSelectedText() {
+
+    const text = window
+        .getSelection()
+        ?.toString()
+        .replace(/\s+/g, " ")
+        .trim();
+
+    if (!text) {
+        return "";
+    }
+
+    if (text.length < 3) {
+        return "";
+    }
+
+    if (text.length > 50) {
+        return "";
+    }
+
+    return text;
+
+}
+
+async function handleSelection(event) {
+
+    clearTimeout(Selection.timer);
+
+    Selection.timer = setTimeout(async () => {
+
+        const text = getSelectedText();
+
+        if (!text) {
+            return;
+        }
+
+        if (text === Selection.lastText) {
+            return;
+        }
+
+        Selection.lastText = text;
+
+        const data = await fetchPlayerData(text);
+
+        tooltip.show(
+            event.pageX + 16,
+            event.pageY + 16,
+            buildCard(data)
+        );
+
+    }, 150);
+
+}
+
+function clearSelection() {
+
+    Selection.lastText = "";
+
+    tooltip.hide();
+
+}
+
+/**********************************************************************
+ * Tooltip Card
+ **********************************************************************/
+
+function buildCard(data) {
+
+    const avatar = data.avatar
+        ? `<img class="scoutcard-avatar" src="${data.avatar}">`
+        : `<div class="scoutcard-avatar scoutcard-avatar-placeholder"></div>`;
+
+    return `
+
+<div class="scoutcard-top">
+
+    ${avatar}
+
+    <div class="scoutcard-info">
+
+        <div class="scoutcard-name">
+            ${data.name}
+        </div>
+
+        <div class="scoutcard-club">
+            ${data.club || "-"}
+        </div>
+
+        <div class="scoutcard-position">
+            ${data.position || "-"}
+        </div>
+
+    </div>
+
+</div>
+
+<div class="scoutcard-divider"></div>
+
+<div class="scoutcard-row">
+
+    <div class="scoutcard-stat">
+
+        <div class="scoutcard-label">
+            L10
+        </div>
+
+        <div class="scoutcard-value">
+            ${data.l10 ?? "-"}
+        </div>
+
+    </div>
+
+    <div class="scoutcard-stat">
+
+        <div class="scoutcard-label">
+            Source
+        </div>
+
+        <div class="scoutcard-value">
+            ${data.source}
+        </div>
+
+    </div>
+
+</div>
+
+`;
+
+}
+
+/**********************************************************************
+ * Replace event registration
+ *
+ * REMOVE:
+ *
+ * document.addEventListener('mouseover', handleHover, true);
+ * document.addEventListener('mousemove', handleMove, true);
+ * document.addEventListener('mouseout', handleLeave, true);
+ *
+ * ADD:
+ **********************************************************************/
+
+function installEvents() {
+
+    document.addEventListener(
+        "mouseup",
+        handleSelection,
+        true
+    );
+
+    document.addEventListener(
+        "scroll",
+        clearSelection,
+        true
+    );
+
+    document.addEventListener(
+        "mousedown",
+        e => {
+
+            if (
+                !tooltip.element.contains(e.target)
+            ) {
+
+                clearSelection();
+
+            }
+
+        },
+        true
+    );
+
+}
+
+/**********************************************************************
+ * Extra CSS
+ *
+ * Add to GM_addStyle()
+ **********************************************************************/
+
+/*
+
+.scoutcard-top{
+
+display:flex;
+gap:12px;
+align-items:center;
+
+}
+
+.scoutcard-avatar{
+
+width:64px;
+height:64px;
+border-radius:8px;
+object-fit:cover;
+background:#333;
+
+}
+
+.scoutcard-avatar-placeholder{
+
+background:#333;
+
+}
+
+.scoutcard-info{
+
+flex:1;
+
+}
+
+.scoutcard-club{
+
+margin-top:4px;
+opacity:.8;
+
+}
+
+.scoutcard-position{
+
+margin-top:4px;
+font-size:12px;
+opacity:.7;
+
+}
+
+.scoutcard-divider{
+
+height:1px;
+background:#333;
+margin:10px 0;
+
+}
+
+.scoutcard-row{
+
+display:flex;
+gap:18px;
+
+}
+
+.scoutcard-stat{
+
+flex:1;
+
+}
+
+.scoutcard-label{
+
+font-size:11px;
+opacity:.6;
+
+}
+
+.scoutcard-value{
+
+font-size:20px;
+font-weight:700;
+
+}
+
+*/
