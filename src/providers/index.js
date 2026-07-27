@@ -3,12 +3,37 @@
  * Providers
  */
 
-import Sorare from "./sorare.js";
+import cache from "../cache.js";
+import Sorare from "./sorare/index.js";
 import getTransfermarktData from "./transfermarkt/index.js";
+
+function cacheKey(name) {
+
+    return name
+        .trim()
+        .toLowerCase();
+
+}
 
 export async function getPlayerData(name) {
 
-    console.log("[ScoutCard] Searching:", name);
+    const key = cacheKey(name);
+
+    if (cache.has(key)) {
+
+        console.log(
+            "[ScoutCard] Cache:",
+            name
+        );
+
+        return cache.get(key);
+
+    }
+
+    console.log(
+        "[ScoutCard] Searching:",
+        name
+    );
 
     const [
 
@@ -67,7 +92,7 @@ export async function getPlayerData(name) {
 
     }
 
-    return {
+    const player = {
 
         sorare:
 
@@ -78,6 +103,16 @@ export async function getPlayerData(name) {
         transfermarkt
 
     };
+
+    cache.set(
+
+        key,
+
+        player
+
+    );
+
+    return player;
 
 }
 

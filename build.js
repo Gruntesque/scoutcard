@@ -10,6 +10,9 @@ const banner = `// ==UserScript==
 // @match        *://*/*
 
 // @grant        GM_xmlhttpRequest
+// @grant        GM_getValue
+// @grant        GM_setValue
+// @grant        GM_addStyle
 
 // @connect      tmapi.transfermarkt.technology
 // @connect      www.transfermarkt.com

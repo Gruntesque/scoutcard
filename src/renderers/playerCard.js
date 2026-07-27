@@ -3,75 +3,24 @@
  * Player Card Renderer
  */
 
-export function renderPlayerCard(player) {
+import renderPlayerHeader from "./playerHeader.js";
+import renderPlayerInfo from "./playerInfo.js";
+import renderPerformanceTable from "./performanceTable.js";
 
-    const flag = player.nationality
-        ? `https://flagcdn.com/24x18/${player.nationality.toLowerCase()}.png`
-        : "";
+export default function renderPlayerCard(player) {
 
     return `
 
-<div class="sc-player-card">
+${renderPlayerHeader(player)}
 
-    <img
-        class="sc-player-avatar"
-        src="${player.avatar || ""}"
-        alt="${player.name}"
-        loading="lazy"
-    >
+<hr>
 
-    <div class="sc-player-info">
+${renderPlayerInfo(player)}
 
-        <div class="sc-player-header">
+<hr>
 
-            <div class="sc-player-name">
-
-                ${player.name}
-
-            </div>
-
-            ${
-                flag
-                    ? `<img class="sc-player-flag" src="${flag}" alt="">`
-                    : ""
-            }
-
-        </div>
-
-        <div class="sc-player-club">
-
-            ${player.club || "-"}
-
-        </div>
-
-        <div class="sc-player-meta">
-
-            <div class="sc-player-position">
-
-                ${player.position || "-"}
-
-            </div>
-
-            <div class="sc-player-separator">
-
-                •
-
-            </div>
-
-            <div class="sc-player-l10">
-
-                L10 ${player.l10 ?? "-"}
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
+${renderPerformanceTable(player)}
 
 `;
 
 }
-
-export default renderPlayerCard;

@@ -11,11 +11,7 @@ export async function getTransfermarktData(name) {
 
     console.time("[TM] Total");
 
-    console.time("[TM] Search");
-
     const results = await searchTransfermarkt(name);
-
-    console.timeEnd("[TM] Search");
 
     if (!results.length) {
 
@@ -27,11 +23,9 @@ export async function getTransfermarktData(name) {
 
     const match = results[0];
 
-    console.time("[TM] Player + Performance");
-
     const [
 
-        player,
+        profile,
 
         performance
 
@@ -43,13 +37,11 @@ export async function getTransfermarktData(name) {
 
     ]);
 
-    console.timeEnd("[TM] Player + Performance");
-
     console.timeEnd("[TM] Total");
 
     return {
 
-        ...player,
+        ...profile,
 
         performance,
 

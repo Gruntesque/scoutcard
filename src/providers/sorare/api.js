@@ -1,13 +1,12 @@
 /**
  * ScoutCard
- * Sorare provider
+ * Sorare API
  */
 
-import { API } from "../config.js";
-import http from "../http.js";
-import Player from "../models/player.js";
+import { API } from "../../config.js";
+import http from "../../http.js";
 
-async function search(query) {
+export async function searchPlayers(query) {
 
     const json = await http.postJSON(
 
@@ -55,20 +54,26 @@ async function search(query) {
 
         json.results?.[0]?.hits ?? [];
 
-    return hits.map(
 
-        hit => Player.fromSorare(hit)
+    console.dir(
+
+        hits[0],
+
+        {
+
+            depth: null
+
+        }
 
     );
 
+
+    return hits;
+
 }
 
-const Sorare = {
+export default {
 
-    name: "Sorare",
-
-    search
+    searchPlayers
 
 };
-
-export default Sorare;

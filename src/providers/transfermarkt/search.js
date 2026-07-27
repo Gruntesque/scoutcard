@@ -3,6 +3,7 @@
  * Transfermarkt Search
  */
 
+import cache from "../../cache/index.js";
 import http from "../../http.js";
 
 const SEARCH_URL =
@@ -61,6 +62,32 @@ function score(query, candidate) {
 }
 
 export async function searchTransfermarkt(name) {
+
+    const alias = normalize(name);
+
+    const cachedId = cache.getAlias(alias);
+
+    if (cachedId) {
+
+        console.log(
+            "[TM] Alias cache:",
+            alias,
+            "→",
+            cachedId
+        );
+
+        return [{
+
+            id: cachedId,
+
+            name,
+
+            url:
+                `https://www.transfermarkt.com/-/profil/spieler/${cachedId}`
+
+        }];
+
+    }
 
     const url =
         `${SEARCH_URL}?query=${encodeURIComponent(name)}`;
@@ -121,6 +148,18 @@ export async function searchTransfermarkt(name) {
         score(name, a.name)
 
     );
+
+    if (players.length) {
+
+        cache.saveAlias(
+
+            alias,
+
+            players[0].id
+
+        );
+
+    }
 
     return players;
 

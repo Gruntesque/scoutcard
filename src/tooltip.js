@@ -3,267 +3,508 @@
  * Tooltip
  */
 
-function isGoalkeeper(player) {
+import renderPlayerCard from "./renderers/playerCard.js";
 
-    const tm = player?.transfermarkt;
-
-    if (!tm) {
-        return false;
-    }
-
-    return tm.positions?.some(position => {
-
-        const name = (
-            position.name ||
-            position.shortName ||
-            ""
-        ).toLowerCase();
-
-        return (
-            name.includes("goalkeeper") ||
-            name.includes("keeper") ||
-            name === "gk" ||
-            name === "gol"
-        );
-
-    });
-
-}
-
-function renderPerformance(player) {
-
-    const tm = player?.transfermarkt;
-
-    const rows = tm?.performance ?? [];
-
-    const goalkeeper = isGoalkeeper(player);
-
-    const headers = goalkeeper
-        ? `
-            <th>Temp.</th>
-            <th>Clube</th>
-            <th>J</th>
-            <th>Min</th>
-            <th>GS</th>
-            <th>SG</th>
-        `
-        : `
-            <th>Temp.</th>
-            <th>Clube</th>
-            <th>J</th>
-            <th>Min</th>
-            <th>G</th>
-            <th>A</th>
-        `;
-
-    const body = rows.map(row => {
-
-        if (goalkeeper) {
-
-            return `
-<tr>
-<td>${row.season}</td>
-<td>${row.club?.shortName ?? "-"}</td>
-<td align="center">${row.appearances}</td>
-<td align="center">${row.minutes}</td>
-<td align="center">${row.goalsConceded}</td>
-<td align="center">${row.cleanSheets}</td>
-</tr>
-`;
-
-        }
-
-        return `
-<tr>
-<td>${row.season}</td>
-<td>${row.club?.shortName ?? "-"}</td>
-<td align="center">${row.appearances}</td>
-<td align="center">${row.minutes}</td>
-<td align="center">${row.goals}</td>
-<td align="center">${row.assists}</td>
-</tr>
-`;
-
-    }).join("");
-
-    return `
-<table style="width:100%;font-size:12px;">
-<thead>
-<tr>
-${headers}
-</tr>
-</thead>
-<tbody>
-${body}
-</tbody>
-</table>
-`;
-
-}
 
 export default class Tooltip {
 
+
     constructor() {
 
-        this.element = document.createElement("div");
 
-        this.element.id = "scoutcard-tooltip";
+        this.element =
+            document.createElement("div");
 
-        Object.assign(this.element.style, {
 
-            position: "fixed",
+        this.element.id =
+            "scoutcard-tooltip";
 
-            top: "20px",
 
-            right: "20px",
+        Object.assign(
 
-            zIndex: 999999,
+            this.element.style,
 
-            width: "620px",
+            {
 
-            maxWidth: "90vw",
+                position: "fixed",
 
-            background: "#1f2937",
+                zIndex: "999999",
 
-            color: "#fff",
+                width: "620px",
 
-            borderRadius: "8px",
+                maxWidth: "90vw",
 
-            padding: "12px 14px",
+                background:
+                    "rgba(25,30,40,0.88)",
 
-            fontFamily: "Arial, sans-serif",
+                backdropFilter:
+                    "blur(8px)",
 
-            fontSize: "13px",
+                color: "#ffffff",
 
-            lineHeight: "1.4",
+                borderRadius:
+                    "12px",
 
-            boxShadow: "0 8px 24px rgba(0,0,0,.35)",
+                padding:
+                    "12px 14px",
 
-            display: "none"
+                fontFamily:
+                    "Roboto, Arial, sans-serif",
+
+                fontSize:
+                    "13px",
+
+                boxShadow:
+                    "0 10px 30px rgba(0,0,0,.45)",
+
+                display:
+                    "none",
+
+                overflow:
+                    "hidden"
+
+            }
+
+        );
+
+
+        this.visible = false;
+
+
+        this.injectFont();
+
+        this.injectStyle();
+
+
+        document.body.appendChild(
+
+            this.element
+
+        );
+
+
+        this.bindEvents();
+
+    }
+
+
+
+    injectFont() {
+
+
+        if (
+
+            document.getElementById(
+
+                "scoutcard-roboto"
+
+            )
+
+        ) {
+
+            return;
+
+        }
+
+
+        const font =
+            document.createElement("link");
+
+
+        font.id =
+            "scoutcard-roboto";
+
+
+        font.rel =
+            "stylesheet";
+
+
+        font.href =
+
+            "https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap";
+
+
+        document.head.appendChild(font);
+
+    }
+
+
+
+    injectStyle() {
+
+
+        if (
+
+            document.getElementById(
+
+                "scoutcard-reset"
+
+            )
+
+        ) {
+
+            return;
+
+        }
+
+
+
+        const style =
+            document.createElement("style");
+
+
+
+        style.id =
+            "scoutcard-reset";
+
+
+
+        style.textContent = `
+
+
+#scoutcard-tooltip,
+#scoutcard-tooltip * {
+
+    box-sizing: border-box;
+
+    font-family:
+        "Roboto",
+        Arial,
+        sans-serif !important;
+
+}
+
+
+
+#scoutcard-tooltip {
+
+    color:#ffffff;
+
+}
+
+
+
+#scoutcard-tooltip table,
+#scoutcard-tooltip thead,
+#scoutcard-tooltip tbody,
+#scoutcard-tooltip tr,
+#scoutcard-tooltip th,
+#scoutcard-tooltip td {
+
+    background:
+        transparent !important;
+
+    color:
+        #ffffff !important;
+
+    border:
+        0 !important;
+
+}
+
+
+
+#scoutcard-tooltip table {
+
+    width:
+        100%;
+
+    border-collapse:
+        collapse;
+
+    border-spacing:
+        0;
+
+}
+
+
+
+#scoutcard-tooltip th,
+#scoutcard-tooltip td {
+
+    padding:
+        6px 8px;
+
+    line-height:
+        1.2;
+
+    vertical-align:
+        middle;
+
+}
+
+
+
+#scoutcard-tooltip tbody tr:hover,
+#scoutcard-tooltip td:hover {
+
+    background:
+        transparent !important;
+
+}
+
+
+
+#scoutcard-tooltip hr {
+
+    margin:
+        12px 0;
+
+    border:
+        0;
+
+    border-top:
+        1px solid rgba(255,255,255,.25);
+
+}
+
+
+
+`;
+
+
+
+        document.head.appendChild(style);
+
+    }
+
+
+
+    bindEvents() {
+
+
+        document.addEventListener(
+
+            "mousedown",
+
+            event => {
+
+
+                if (!this.visible) {
+
+                    return;
+
+                }
+
+
+                if (
+
+                    !this.element.contains(
+
+                        event.target
+
+                    )
+
+                ) {
+
+                    this.hide();
+
+                }
+
+
+            }
+
+        );
+
+
+
+        document.addEventListener(
+
+            "keydown",
+
+            event => {
+
+
+                if (
+
+                    event.key === "Escape"
+
+                ) {
+
+                    this.hide();
+
+                }
+
+
+            }
+
+        );
+
+
+    }
+
+
+
+    position(x, y) {
+
+
+        const gap = 16;
+
+
+        const rect =
+            this.element.getBoundingClientRect();
+
+
+        let left =
+            x + gap;
+
+
+        let top =
+            y + gap;
+
+
+
+        if (
+
+            left + rect.width >
+
+            window.innerWidth
+
+        ) {
+
+            left =
+                x - rect.width - gap;
+
+        }
+
+
+
+        if (
+
+            top + rect.height >
+
+            window.innerHeight
+
+        ) {
+
+            top =
+                y - rect.height - gap;
+
+        }
+
+
+
+        this.element.style.left =
+
+            `${Math.max(left, 10)}px`;
+
+
+
+        this.element.style.top =
+
+            `${Math.max(top, 10)}px`;
+
+    }
+
+
+
+    show(player, x, y) {
+
+
+        this.element.innerHTML =
+
+            renderPlayerCard(player);
+
+
+
+        this.element.style.display =
+
+            "block";
+
+
+
+        this.visible = true;
+
+
+
+        requestAnimationFrame(() => {
+
+
+            this.position(
+
+                x,
+
+                y
+
+            );
+
 
         });
 
-        document.body.appendChild(this.element);
 
     }
 
-    hide() {
 
-        this.element.style.display = "none";
-
-    }
 
     showLoading(name) {
 
-        this.element.style.display = "block";
 
         this.element.innerHTML = `
-<strong>${name}</strong><br>
-Loading...
+
+<div>
+
+Loading ${name}...
+
+</div>
+
 `;
 
+
+
+        this.element.style.display =
+
+            "block";
+
+
+
+        this.visible = true;
+
+
     }
+
+
 
     showError(message) {
 
-        this.element.style.display = "block";
-
-        this.element.innerHTML = `
-<strong>ScoutCard</strong><br>
-${message}
-`;
-
-    }
-
-    show(player) {
-
-        const sorare = player?.sorare;
-        const tm = player?.transfermarkt;
-
-        this.element.style.display = "block";
 
         this.element.innerHTML = `
 
-<div style="display:flex;gap:18px;">
+<div>
 
-${tm?.photo ? `
-<img
-src="${tm.photo}"
-style="
-width:150px;
-height:150px;
-object-fit:cover;
-border-radius:8px;
-">
-` : ""}
-
-<div style="flex:1">
-
-<div style="font-size:24px;font-weight:bold;">
-${tm?.name ?? "-"}
-</div>
-
-<div style="font-size:18px;">
-${tm?.marketValue ?? "-"}
-</div>
-
-<div style="font-size:16px;">
-${tm?.age ?? "-"} anos ·
-${tm?.height ?? "-"} ·
-${tm?.foot ?? "-"}
-</div>
-
-<div style="font-size:16px;">
-Contrato:
-${tm?.contractUntil ?? "-"}
-</div>
+Error: ${message}
 
 </div>
-
-</div>
-
-<hr>
-
-<table style="width:100%">
-
-<tr>
-
-<td><strong>Sorare:</strong></td>
-<td>${sorare?.position ?? "-"}</td>
-
-<td><strong>L5:</strong></td>
-<td>${sorare?.l5 ?? "-"}</td>
-
-<td><strong>L10:</strong></td>
-<td>${sorare?.l10 ?? "-"}</td>
-
-<td><strong>L40:</strong></td>
-<td>${sorare?.l40 ?? "-"}</td>
-
-</tr>
-
-<tr>
-
-<td><strong>TM:</strong></td>
-
-<td colspan="7">
-
-${tm?.positions?.map(
-p => p.shortName
-).join(" • ") ?? "-"}
-
-</td>
-
-</tr>
-
-</table>
-
-<hr>
-
-${renderPerformance(player)}
 
 `;
 
+
+
+        this.element.style.display =
+
+            "block";
+
+
+
+        this.visible = true;
+
+
     }
+
+
+
+    hide() {
+
+
+        this.element.style.display =
+
+            "none";
+
+
+
+        this.visible = false;
+
+
+    }
+
 
 }

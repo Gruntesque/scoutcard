@@ -3,6 +3,8 @@
  * Transfermarkt Performance
  */
 
+import cache from "../../cache/index.js";
+import TTL from "../../cache/ttl.js";
 import { getPerformance } from "./api.js";
 import resolveClubs from "./clubs.js";
 
@@ -61,6 +63,42 @@ function createSeason(name) {
 }
 
 export async function getTransfermarktPerformance(playerId) {
+
+    if (
+
+        !cache.needsRefresh(
+
+            playerId,
+
+            "transfermarkt",
+
+            "performance",
+
+            TTL.PERFORMANCE
+
+        )
+
+    ) {
+
+        console.log(
+
+            "[TM] Performance cache:",
+
+            playerId
+
+        );
+
+        return cache.getSource(
+
+            playerId,
+
+            "transfermarkt",
+
+            "performance"
+
+        ).data;
+
+    }
 
     console.time("[TM] Performance");
 
@@ -189,11 +227,29 @@ export async function getTransfermarktPerformance(playerId) {
 
     }
 
-    return rows
+    const performance = rows
+
         .sort((a, b) =>
+
             b.season.localeCompare(a.season)
+
         )
+
         .slice(0, 3);
+
+    cache.saveSource(
+
+        playerId,
+
+        "transfermarkt",
+
+        "performance",
+
+        performance
+
+    );
+
+    return performance;
 
 }
 

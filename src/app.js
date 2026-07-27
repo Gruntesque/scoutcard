@@ -1,123 +1,128 @@
 /**
  * ScoutCard
- * Main application
+ * Application
  */
 
+import Selection from "./selection.js";
 import Tooltip from "./tooltip.js";
-import getPlayerData from "./providers/index.js";
+import resolvePlayers from "./providers/index.js";
+import { clearDatabase } from "./cache/storage.js";
+
 
 export default class ScoutCard {
 
     constructor() {
 
-        this.tooltip = new Tooltip();
+        this.selection =
+            new Selection(
 
-        this.currentSelection = "";
+                this.onSelection.bind(this)
 
-        this.timer = null;
+            );
 
-        this.requestId = 0;
+
+        this.tooltip =
+            new Tooltip();
 
     }
+
 
     start() {
 
-        document.addEventListener(
+        console.log(
 
-            "mouseup",
+            "ScoutCard"
 
-            () => this.onSelection(),
+        );
 
-            true
+
+        console.log(
+
+            "Version: 0.1.0"
+
+        );
+
+
+        console.log(
+
+            "Initialized"
+
+        );
+
+
+        this.selection.start();
+
+    }
+
+
+    clearCache() {
+
+        clearDatabase();
+
+
+        console.log(
+
+            "[ScoutCard] Cache cleared"
 
         );
 
     }
 
-    onSelection() {
 
-        clearTimeout(this.timer);
+    async onSelection(selection) {
 
-        this.timer = setTimeout(
+        const name =
+            selection.text;
 
-            () => this.loadSelection(),
 
-            150
+        if (!name) {
+
+            return;
+
+        }
+
+
+        console.log(
+
+            "[ScoutCard] Selection:",
+
+            name
 
         );
 
-    }
 
-    async loadSelection() {
+        this.tooltip.showLoading(name);
 
-        const text = window
-            .getSelection()
-            .toString()
-            .trim();
-
-        if (text.length < 3) {
-
-            this.tooltip.hide();
-
-            return;
-
-        }
-
-        if (text === this.currentSelection) {
-            return;
-        }
-
-        this.currentSelection = text;
-
-        const requestId = ++this.requestId;
-
-        console.log("");
-
-        console.log("==============================");
-
-        console.log("[ScoutCard] Selection:", text);
-
-        console.time("[ScoutCard] Total");
-
-        this.tooltip.showLoading(text);
 
         try {
 
-            console.time("[ScoutCard] Providers");
+            const player =
+                await resolvePlayers(name);
 
-            const player = await getPlayerData(text);
 
-            console.timeEnd("[ScoutCard] Providers");
+            this.tooltip.show(
 
-            if (requestId !== this.requestId) {
+                player,
 
-                console.log(
-                    "[ScoutCard] Ignoring stale request."
-                );
+                selection.x,
 
-                return;
+                selection.y
 
-            }
+            );
 
-            console.time("[ScoutCard] Render");
-
-            this.tooltip.show(player);
-
-            console.timeEnd("[ScoutCard] Render");
 
         }
 
-        catch (error) {
+        catch(error) {
 
             console.error(error);
 
-            this.tooltip.showError(error.message);
 
-        }
+            this.tooltip.showError(
 
-        finally {
+                error.message
 
-            console.timeEnd("[ScoutCard] Total");
+            );
 
         }
 

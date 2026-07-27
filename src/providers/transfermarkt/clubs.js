@@ -3,59 +3,122 @@
  * Transfermarkt Clubs
  */
 
+import cache from "../../cache/index.js";
+import TTL from "../../cache/ttl.js";
 import { getClubs } from "./api.js";
 
-const cache = new Map();
+const PROVIDER = "transfermarkt";
+const RESOURCE = "club";
 
 export async function resolveClubs(ids) {
 
-    const missing = ids.filter(
+    const clubs = new Map();
 
-        id => id && !cache.has(String(id))
+    const missing = [];
 
-    );
+    for (const id of ids) {
+
+        if (!id) {
+            continue;
+        }
+
+        if (
+
+            !cache.needsRefresh(
+
+                id,
+
+                PROVIDER,
+
+                RESOURCE,
+
+                TTL.PROFILE
+
+            )
+
+        ) {
+
+            clubs.set(
+
+                String(id),
+
+                cache.getSource(
+
+                    id,
+
+                    PROVIDER,
+
+                    RESOURCE
+
+                ).data
+
+            );
+
+        }
+
+        else {
+
+            missing.push(id);
+
+        }
+
+    }
 
     if (missing.length) {
 
-        const clubs = await getClubs(missing);
+        const response = await getClubs(missing);
 
-        for (const club of clubs) {
+        for (const club of response) {
 
-            cache.set(
+            const data = {
+
+                id: club.id,
+
+                name: club.name,
+
+                shortName:
+
+                    club.baseDetails?.shortName ??
+
+                    club.name,
+
+                crest:
+
+                    club.crestUrl ??
+
+                    null,
+
+                countryId:
+
+                    club.baseDetails?.countryId ??
+
+                    null,
+
+                url:
+
+                    club.relativeUrl ??
+
+                    null
+
+            };
+
+            cache.saveSource(
 
                 String(club.id),
 
-                {
+                PROVIDER,
 
-                    id: club.id,
+                RESOURCE,
 
-                    name: club.name,
+                data
 
-                    shortName:
+            );
 
-                        club.baseDetails?.shortName ||
+            clubs.set(
 
-                        club.name,
+                String(club.id),
 
-                    crest:
-
-                        club.crestUrl ||
-
-                        null,
-
-                    countryId:
-
-                        club.baseDetails?.countryId ||
-
-                        null,
-
-                    url:
-
-                        club.relativeUrl ||
-
-                        null
-
-                }
+                data
 
             );
 
@@ -63,7 +126,7 @@ export async function resolveClubs(ids) {
 
     }
 
-    return cache;
+    return clubs;
 
 }
 
