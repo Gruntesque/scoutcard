@@ -4,7 +4,6 @@
  */
 
 import bootIcon from "../assets/boot.js";
-import countryToCode from "../assets/flags.js";
 
 
 function formatFoot(foot) {
@@ -115,21 +114,14 @@ title="Captain"
 
 
 
-function nationalityFlag(name) {
+function nationalityFlag(tm) {
 
 
-    const code =
-
-        countryToCode(name);
-
-
-
-    if (!code) {
+    if (!tm?.flag) {
 
         return "";
 
     }
-
 
 
     return `
@@ -138,9 +130,9 @@ function nationalityFlag(name) {
 
 class="scoutcard-flag"
 
-src="https://flagcdn.com/20x15/${code}.png"
+src="${tm.flag}"
 
-title="${name}"
+title="${tm.nationalityName || ""}"
 
 >
 
@@ -157,7 +149,7 @@ function nationalities(tm) {
 
         nationalityFlag(
 
-            tm.nationalityName
+            tm
 
         )
 

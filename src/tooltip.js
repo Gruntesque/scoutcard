@@ -5,6 +5,10 @@
 
 import renderPlayerCard from "./renderers/playerCard.js";
 
+import {
+    preparePlayerAssets
+} from "./assets/playerAssets.js";
+
 
 export default class Tooltip {
 
@@ -40,7 +44,8 @@ export default class Tooltip {
                 backdropFilter:
                     "blur(8px)",
 
-                color: "#ffffff",
+                color:
+                    "#ffffff",
 
                 borderRadius:
                     "12px",
@@ -55,7 +60,7 @@ export default class Tooltip {
                     "13px",
 
                 boxShadow:
-                    "0 10px 30px rgba(0,0,0,.45)",
+                    "0 10px 30px rgba(0,255,255,.45)",
 
                 display:
                     "none",
@@ -148,32 +153,24 @@ export default class Tooltip {
         }
 
 
-
         const style =
             document.createElement("style");
-
 
 
         style.id =
             "scoutcard-reset";
 
 
-
         style.textContent = `
-
 
 #scoutcard-tooltip,
 #scoutcard-tooltip * {
 
-    box-sizing: border-box;
+    box-sizing:border-box;
 
-    font-family:
-        "Roboto",
-        Arial,
-        sans-serif !important;
+    font-family:"Roboto",Arial,sans-serif !important;
 
 }
-
 
 
 #scoutcard-tooltip {
@@ -183,7 +180,6 @@ export default class Tooltip {
 }
 
 
-
 #scoutcard-tooltip table,
 #scoutcard-tooltip thead,
 #scoutcard-tooltip tbody,
@@ -191,77 +187,43 @@ export default class Tooltip {
 #scoutcard-tooltip th,
 #scoutcard-tooltip td {
 
-    background:
-        transparent !important;
+    background:transparent !important;
 
-    color:
-        #ffffff !important;
+    color:#ffffff !important;
 
-    border:
-        0 !important;
+    border:0 !important;
 
 }
-
 
 
 #scoutcard-tooltip table {
 
-    width:
-        100%;
+    width:100%;
 
-    border-collapse:
-        collapse;
-
-    border-spacing:
-        0;
+    border-collapse:collapse;
 
 }
-
 
 
 #scoutcard-tooltip th,
 #scoutcard-tooltip td {
 
-    padding:
-        6px 8px;
-
-    line-height:
-        1.2;
-
-    vertical-align:
-        middle;
+    padding:6px 8px;
 
 }
-
-
-
-#scoutcard-tooltip tbody tr:hover,
-#scoutcard-tooltip td:hover {
-
-    background:
-        transparent !important;
-
-}
-
 
 
 #scoutcard-tooltip hr {
 
-    margin:
-        12px 0;
+    margin:12px 0;
 
-    border:
-        0;
+    border:0;
 
-    border-top:
-        1px solid rgba(255,255,255,.25);
+    border-top:1px solid rgba(255,255,255,.25);
 
 }
 
-
-
 `;
-
 
 
         document.head.appendChild(style);
@@ -386,24 +348,38 @@ export default class Tooltip {
 
         this.element.style.left =
 
-            `${Math.max(left, 10)}px`;
+            `${Math.max(left,10)}px`;
 
 
 
         this.element.style.top =
 
-            `${Math.max(top, 10)}px`;
+            `${Math.max(top,10)}px`;
 
     }
 
 
 
-    show(player, x, y) {
+    async show(player, x, y) {
+
+
+        const prepared =
+
+            await preparePlayerAssets(
+
+                player
+
+            );
+
 
 
         this.element.innerHTML =
 
-            renderPlayerCard(player);
+            renderPlayerCard(
+
+                prepared
+
+            );
 
 
 
@@ -450,11 +426,9 @@ Loading ${name}...
 `;
 
 
-
         this.element.style.display =
 
             "block";
-
 
 
         this.visible = true;
@@ -478,11 +452,9 @@ Error: ${message}
 `;
 
 
-
         this.element.style.display =
 
             "block";
-
 
 
         this.visible = true;
@@ -498,7 +470,6 @@ Error: ${message}
         this.element.style.display =
 
             "none";
-
 
 
         this.visible = false;

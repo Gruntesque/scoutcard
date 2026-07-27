@@ -6,27 +6,60 @@
 import { CONFIG } from "./config.js";
 import { looksLikePlayerName } from "./utils/text.js";
 
+
 export class SelectionManager {
 
-    constructor(callback) {
+
+    constructor(
+
+        callback,
+
+        hoverCallback
+
+    ) {
+
 
         this.callback = callback;
+
+        this.hoverCallback = hoverCallback;
+
 
         this.timer = null;
 
         this.lastSelection = "";
 
+        this.lastSelectionData = null;
+
+
         this.enabled = false;
 
-        this.onMouseUp = this.onMouseUp.bind(this);
 
-        this.onScroll = this.onScroll.bind(this);
+        this.onMouseUp =
 
-        this.onKeyDown = this.onKeyDown.bind(this);
+            this.onMouseUp.bind(this);
+
+
+        this.onMouseOver =
+
+            this.onMouseOver.bind(this);
+
+
+        this.onScroll =
+
+            this.onScroll.bind(this);
+
+
+        this.onKeyDown =
+
+            this.onKeyDown.bind(this);
+
 
     }
 
+
+
     start() {
+
 
         if (this.enabled) {
 
@@ -34,7 +67,11 @@ export class SelectionManager {
 
         }
 
+
+
         this.enabled = true;
+
+
 
         document.addEventListener(
 
@@ -46,6 +83,20 @@ export class SelectionManager {
 
         );
 
+
+
+        document.addEventListener(
+
+            "mouseover",
+
+            this.onMouseOver,
+
+            true
+
+        );
+
+
+
         document.addEventListener(
 
             "keydown",
@@ -55,6 +106,8 @@ export class SelectionManager {
             true
 
         );
+
+
 
         window.addEventListener(
 
@@ -66,9 +119,13 @@ export class SelectionManager {
 
         );
 
+
     }
 
+
+
     stop() {
+
 
         if (!this.enabled) {
 
@@ -76,7 +133,11 @@ export class SelectionManager {
 
         }
 
+
+
         this.enabled = false;
+
+
 
         document.removeEventListener(
 
@@ -88,6 +149,20 @@ export class SelectionManager {
 
         );
 
+
+
+        document.removeEventListener(
+
+            "mouseover",
+
+            this.onMouseOver,
+
+            true
+
+        );
+
+
+
         document.removeEventListener(
 
             "keydown",
@@ -97,6 +172,8 @@ export class SelectionManager {
             true
 
         );
+
+
 
         window.removeEventListener(
 
@@ -108,15 +185,27 @@ export class SelectionManager {
 
         );
 
+
     }
+
+
 
     getSelection() {
 
-        const text = window
-            .getSelection()
-            ?.toString()
-            ?.replace(/\s+/g, " ")
-            ?.trim();
+
+        const text =
+
+            window
+
+                .getSelection()
+
+                ?.toString()
+
+                ?.replace(/\s+/g, " ")
+
+                ?.trim();
+
+
 
         if (!text) {
 
@@ -124,88 +213,254 @@ export class SelectionManager {
 
         }
 
-        if (text.length < CONFIG.minSelectionLength) {
+
+
+        if (
+
+            text.length <
+
+            CONFIG.minSelectionLength
+
+        ) {
 
             return "";
 
         }
 
-        if (text.length > CONFIG.maxSelectionLength) {
+
+
+        if (
+
+            text.length >
+
+            CONFIG.maxSelectionLength
+
+        ) {
 
             return "";
 
         }
+
+
 
         return text;
 
+
     }
+
+
 
     clear() {
 
+
         this.lastSelection = "";
 
+        this.lastSelectionData = null;
+
+
     }
+
+
 
     onScroll() {
 
+
         this.clear();
 
+
     }
+
+
 
     onKeyDown(event) {
 
-        if (event.key === "Escape") {
 
-            this.clear();
+        if (
+
+            event.key === "Escape"
+
+        ) {
+
+            return;
 
         }
 
+
     }
+
+
 
     onMouseUp(event) {
 
+
         clearTimeout(this.timer);
 
-        this.timer = setTimeout(() => {
 
-            const text = this.getSelection();
 
-            if (!text) {
+        this.timer =
 
-                return;
+            setTimeout(() => {
 
-            }
 
-            if (!looksLikePlayerName(text)) {
 
-                return;
+                const text =
 
-            }
+                    this.getSelection();
 
-            if (text === this.lastSelection) {
 
-                return;
 
-            }
+                if (!text) {
 
-            this.lastSelection = text;
+                    return;
 
-            this.callback({
+                }
 
-                text,
 
-                x: event.clientX,
 
-                y: event.clientY,
+                if (
 
-                target: event.target
+                    !looksLikePlayerName(text)
 
-            });
+                ) {
 
-        }, CONFIG.selectionDelay);
+                    return;
+
+                }
+
+
+
+                if (
+
+                    text === this.lastSelection
+
+                ) {
+
+                    return;
+
+                }
+
+
+
+                const data = {
+
+
+                    text,
+
+                    x:event.clientX,
+
+                    y:event.clientY,
+
+                    target:event.target
+
+
+                };
+
+
+
+                this.lastSelection = text;
+
+                this.lastSelectionData = data;
+
+
+
+                this.callback(data);
+
+
+
+            },
+
+            CONFIG.selectionDelay
+
+            );
+
 
     }
 
+
+
+    onMouseOver(event) {
+
+
+        if (
+
+            !this.lastSelectionData
+
+        ) {
+
+            return;
+
+        }
+
+
+
+        if (
+
+            !this.hoverCallback
+
+        ) {
+
+            return;
+
+        }
+
+
+
+        const currentSelection =
+
+            window
+
+                .getSelection()
+
+                ?.toString()
+
+                ?.replace(/\s+/g, " ")
+
+                ?.trim();
+
+
+
+        if (
+
+            currentSelection !==
+
+            this.lastSelectionData.text
+
+        ) {
+
+            return;
+
+        }
+
+
+
+        const target =
+
+            this.lastSelectionData.target;
+
+
+
+        if (
+
+            event.target === target
+
+        ) {
+
+
+            this.hoverCallback(
+
+                this.lastSelectionData
+
+            );
+
+
+        }
+
+
+    }
+
+
 }
+
+
 
 export default SelectionManager;

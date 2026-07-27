@@ -7,11 +7,16 @@ import searchTransfermarkt from "./search.js";
 import getTransfermarktPlayer from "./player.js";
 import getTransfermarktPerformance from "./performance.js";
 
+
 export async function getTransfermarktData(name) {
 
     console.time("[TM] Total");
 
-    const results = await searchTransfermarkt(name);
+
+    const results =
+
+        await searchTransfermarkt(name);
+
 
     if (!results.length) {
 
@@ -21,7 +26,15 @@ export async function getTransfermarktData(name) {
 
     }
 
+
     const match = results[0];
+
+
+    console.log(
+        "[TM] Selected match:",
+        match
+    );
+
 
     const [
 
@@ -37,7 +50,9 @@ export async function getTransfermarktData(name) {
 
     ]);
 
+
     console.timeEnd("[TM] Total");
+
 
     return {
 
@@ -50,5 +65,6 @@ export async function getTransfermarktData(name) {
     };
 
 }
+
 
 export default getTransfermarktData;

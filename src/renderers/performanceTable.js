@@ -17,6 +17,60 @@ function isGoalkeeper(player) {
 
 
 
+function hasMultipleClubs(season, rows) {
+
+    return (
+
+        new Set(
+
+            rows
+
+                .filter(
+
+                    row =>
+
+                        row.season === season
+
+                )
+
+                .map(
+
+                    row =>
+
+                        row.clubId
+
+                )
+
+        ).size > 1
+
+    );
+
+}
+
+
+
+function renderSeason(row, rows) {
+
+    return (
+
+        hasMultipleClubs(
+
+            row.season,
+
+            rows
+
+        )
+
+            ? `${row.season}*`
+
+            : row.season
+
+    );
+
+}
+
+
+
 function renderHeaders(goalkeeper) {
 
 
@@ -51,14 +105,14 @@ function renderHeaders(goalkeeper) {
 
 
 
-function renderGoalkeeperRow(row) {
+function renderGoalkeeperRow(row, rows) {
 
 
     return `
 
 <tr>
 
-<td>${row.season ?? "-"}</td>
+<td>${renderSeason(row, rows)}</td>
 
 <td>${row.club?.shortName ?? "-"}</td>
 
@@ -78,14 +132,14 @@ function renderGoalkeeperRow(row) {
 
 
 
-function renderOutfieldRow(row) {
+function renderOutfieldRow(row, rows) {
 
 
     return `
 
 <tr>
 
-<td>${row.season ?? "-"}</td>
+<td>${renderSeason(row, rows)}</td>
 
 <td>${row.club?.shortName ?? "-"}</td>
 
@@ -141,9 +195,9 @@ ${rows.map(row =>
 
     goalkeeper
 
-        ? renderGoalkeeperRow(row)
+        ? renderGoalkeeperRow(row, rows)
 
-        : renderOutfieldRow(row)
+        : renderOutfieldRow(row, rows)
 
 ).join("")}
 

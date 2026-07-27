@@ -1,119 +1,110 @@
 /**
  * ScoutCard
- * Providers
+ * Providers Resolver
  */
 
+
+import {
+
+    getTransfermarktData
+
+} from "./transfermarkt/index.js";
+
+
 import cache from "../cache.js";
-import Sorare from "./sorare/index.js";
-import getTransfermarktData from "./transfermarkt/index.js";
 
-function cacheKey(name) {
 
-    return name
-        .trim()
-        .toLowerCase();
 
-}
+export async function resolvePlayers(
 
-export async function getPlayerData(name) {
+    name
 
-    const key = cacheKey(name);
+) {
 
-    if (cache.has(key)) {
 
-        console.log(
-            "[ScoutCard] Cache:",
-            name
-        );
+    const key =
 
-        return cache.get(key);
-
-    }
-
-    console.log(
-        "[ScoutCard] Searching:",
         name
-    );
 
-    const [
+            .toLowerCase()
 
-        sorareResult,
+            .trim();
 
-        transfermarktResult
 
-    ] = await Promise.allSettled([
 
-        Sorare.search(name),
+    const cached =
 
-        getTransfermarktData(name)
+        cache.get(
 
-    ]);
+            key
 
-    let sorare = null;
-    let transfermarkt = null;
-
-    if (sorareResult.status === "fulfilled") {
-
-        sorare = sorareResult.value;
-
-        console.log(
-            "[ScoutCard] Sorare:",
-            sorare
         );
+
+
+
+    if (
+
+        cached
+
+    ) {
+
+        return cached;
 
     }
 
-    else {
 
-        console.error(
-            "[ScoutCard] Sorare failed",
-            sorareResult.reason
+
+    const player =
+
+        await getTransfermarktData(
+
+            name
+
         );
+
+
+
+    if (
+
+        !player
+
+    ) {
+
+        return null;
 
     }
 
-    if (transfermarktResult.status === "fulfilled") {
 
-        transfermarkt = transfermarktResult.value;
 
-        console.log(
-            "[ScoutCard] Transfermarkt:",
-            transfermarkt
-        );
+    const result = {
 
-    }
+        type:
 
-    else {
+            "player",
 
-        console.error(
-            "[ScoutCard] Transfermarkt failed",
-            transfermarktResult.reason
-        );
+        data:
 
-    }
-
-    const player = {
-
-        sorare:
-
-            sorare?.[0] ??
-
-            null,
-
-        transfermarkt
+            player
 
     };
+
+
 
     cache.set(
 
         key,
 
-        player
+        result
 
     );
 
-    return player;
+
+
+    return result;
+
 
 }
 
-export default getPlayerData;
+
+
+export default resolvePlayers;
