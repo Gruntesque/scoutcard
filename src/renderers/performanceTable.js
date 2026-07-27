@@ -119,6 +119,7 @@ export default function renderPerformanceTable(player) {
 
     return `
 
+
 <table class="scoutcard-performance">
 
 
@@ -165,6 +166,8 @@ border-collapse:collapse;
 
 font-size:13px;
 
+font-family:inherit !important;
+
 }
 
 
@@ -179,6 +182,8 @@ border:0 !important;
 background:transparent;
 
 color:#ffffff;
+
+font-family:inherit !important;
 
 }
 

@@ -3,6 +3,9 @@
  * Player Header Renderer
  */
 
+import bootIcon from "../assets/boot.js";
+import countryToCode from "../assets/flags.js";
+
 
 function formatFoot(foot) {
 
@@ -16,9 +19,11 @@ function formatFoot(foot) {
     switch (foot.toLowerCase()) {
 
         case "direito":
+        case "right":
             return "right";
 
         case "esquerdo":
+        case "left":
             return "left";
 
         case "ambidestro":
@@ -29,6 +34,25 @@ function formatFoot(foot) {
             return foot;
 
     }
+
+}
+
+
+
+function formatMarketValue(value) {
+
+    if (!value) {
+
+        return "-";
+
+    }
+
+
+    return value
+
+        .replace(",", ".")
+
+        .replace(/m$/, "M");
 
 }
 
@@ -86,6 +110,75 @@ title="Captain"
 >
 
 `;
+
+}
+
+
+
+function nationalityFlag(name) {
+
+
+    const code =
+
+        countryToCode(name);
+
+
+
+    if (!code) {
+
+        return "";
+
+    }
+
+
+
+    return `
+
+<img
+
+class="scoutcard-flag"
+
+src="https://flagcdn.com/20x15/${code}.png"
+
+title="${name}"
+
+>
+
+`;
+
+}
+
+
+
+function nationalities(tm) {
+
+
+    return (
+
+        nationalityFlag(
+
+            tm.nationalityName
+
+        )
+
+    );
+
+}
+
+
+
+function currentClub(tm) {
+
+
+    return (
+
+        tm.performance?.[0]?.club?.shortName ||
+
+        tm.currentClub?.name ||
+
+        "-"
+
+    );
 
 }
 
@@ -149,9 +242,19 @@ src="${tm.photo || ""}"
 
 <div class="scoutcard-name">
 
+${nationalities(tm)}
+
 ${tm.name}
 
 ${captainIcon(player)}
+
+</div>
+
+
+
+<div class="scoutcard-club">
+
+${currentClub(tm)}
 
 </div>
 
@@ -167,6 +270,7 @@ ${positions(tm)}
 
 <div class="scoutcard-details">
 
+
 ${tm.age || "-"}
 
 years
@@ -179,7 +283,19 @@ m
 
 •
 
+<img
+
+class="scoutcard-foot"
+
+src="${bootIcon}"
+
+title="Preferred foot"
+
+>
+
 ${formatFoot(tm.foot)}
+
+
 
 </div>
 
@@ -187,7 +303,7 @@ ${formatFoot(tm.foot)}
 
 <div class="scoutcard-market">
 
-${tm.marketValue || "-"}
+${formatMarketValue(tm.marketValue)}
 
 •
 
@@ -209,6 +325,10 @@ ${tm.contractUntil || "-"}
 <style>
 
 
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+
+
 .scoutcard-header {
 
 display:flex;
@@ -216,6 +336,16 @@ display:flex;
 gap:16px;
 
 align-items:flex-start;
+
+font-family:Roboto, Arial, sans-serif;
+
+}
+
+
+
+.scoutcard-header * {
+
+font-family:Roboto, Arial, sans-serif;
 
 }
 
@@ -261,13 +391,25 @@ gap:6px;
 
 
 
-.scoutcard-captain {
+.scoutcard-flag {
 
-width:18px;
+width:20px;
 
-height:18px;
+height:15px;
 
-object-fit:contain;
+object-fit:cover;
+
+}
+
+
+
+.scoutcard-club {
+
+font-size:18px;
+
+font-weight:600;
+
+margin-top:4px;
 
 }
 
@@ -291,6 +433,24 @@ font-size:18px;
 
 margin-top:4px;
 
+display:flex;
+
+align-items:center;
+
+gap:6px;
+
+}
+
+
+
+.scoutcard-foot {
+
+width:22px;
+
+height:22px;
+
+object-fit:contain;
+
 }
 
 
@@ -300,6 +460,18 @@ margin-top:4px;
 font-size:18px;
 
 margin-top:4px;
+
+}
+
+
+
+.scoutcard-captain {
+
+width:18px;
+
+height:18px;
+
+object-fit:contain;
 
 }
 

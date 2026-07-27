@@ -5,7 +5,7 @@
 
 import cache from "../../cache/index.js";
 import TTL from "../../cache/ttl.js";
-import { getPlayer } from "./api.js";
+import { getPlayer, getCountries } from "./api.js";
 
 
 const POSITION_MAP = {
@@ -43,6 +43,11 @@ const POSITION_MAP = {
 };
 
 
+
+let countriesCache = null;
+
+
+
 function formatMarketValue(details) {
 
     if (!details?.current?.compact) {
@@ -59,6 +64,7 @@ function formatMarketValue(details) {
     return `${compact.prefix}${compact.content}${compact.suffix}`;
 
 }
+
 
 
 function getNationalities(player) {
@@ -83,6 +89,70 @@ function getNationalities(player) {
     ].filter(Boolean);
 
 }
+
+
+
+async function getCountryMap() {
+
+    if (countriesCache) {
+
+        return countriesCache;
+
+    }
+
+
+    const countries =
+        await getCountries();
+
+
+
+    countriesCache = {};
+
+
+    countries.forEach(country => {
+
+        countriesCache[country.id] =
+            country.name;
+
+    });
+
+
+    return countriesCache;
+
+}
+
+
+
+async function getNationalityName(player) {
+
+    const nationalities =
+        getNationalities(player);
+
+
+    if (!nationalities.length) {
+
+        return null;
+
+    }
+
+
+    const countries =
+        await getCountryMap();
+
+
+
+    return (
+
+        countries[nationalities[0]]
+
+        ??
+
+        null
+
+    );
+
+}
+
 
 
 function getPositions(attributes) {
@@ -121,6 +191,7 @@ function getPositions(attributes) {
 }
 
 
+
 function getCurrentClub(player) {
 
     return (
@@ -138,6 +209,7 @@ function getCurrentClub(player) {
     );
 
 }
+
 
 
 function getCaptainStatus(player) {
@@ -163,6 +235,7 @@ function getCaptainStatus(player) {
     );
 
 }
+
 
 
 function getNationalTeam(player) {
@@ -217,6 +290,7 @@ function getNationalTeam(player) {
     };
 
 }
+
 
 
 export async function getTransfermarktPlayer(id) {
@@ -337,6 +411,10 @@ export async function getTransfermarktPlayer(id) {
 
         nationalities:
             getNationalities(player),
+
+
+        nationalityName:
+            await getNationalityName(player),
 
 
         isCaptain:

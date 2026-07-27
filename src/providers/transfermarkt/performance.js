@@ -8,35 +8,94 @@ import TTL from "../../cache/ttl.js";
 import { getPerformance } from "./api.js";
 import resolveClubs from "./clubs.js";
 
+
 const PLAYED = new Set([
+
     "played",
+
     "substituted in",
+
     "substituted out",
+
     "played after extra time",
+
     "extra time",
+
     "penalty shootout"
+
 ]);
+
+
 
 function seasonName(game) {
 
     return (
+
         game.gameInformation?.season?.display ??
+
         game.gameInformation?.season?.nonCyclicalName ??
+
         game.gameInformation?.season?.cyclicalName ??
+
         "-"
+
     );
 
 }
 
-function createSeason(name) {
+
+
+function seasonSortValue(season) {
+
+    if (!season) {
+
+        return 0;
+
+    }
+
+
+
+    if (/^\d{4}$/.test(season)) {
+
+        return Number(season);
+
+    }
+
+
+
+    const match =
+
+        season.match(/^(\d{2})\/(\d{2})$/);
+
+
+
+    if (match) {
+
+        return 2000 + Number(match[1]);
+
+    }
+
+
+
+    return 0;
+
+}
+
+
+
+function createSeason(name, clubId, order) {
 
     return {
 
         season: name,
 
-        clubId: null,
+        seasonSort: seasonSortValue(name),
+
+        clubId,
 
         club: null,
+
+        order,
 
         appearances: 0,
 
@@ -62,35 +121,318 @@ function createSeason(name) {
 
 }
 
-export async function getTransfermarktPerformance(playerId) {
+
+
+function getClubId(game) {
+
+    return (
+
+        game.clubsInformation?.club?.clubId ??
+
+        game.clubsInformation?.club?.id ??
+
+        game.gameInformation?.clubId ??
+
+        null
+
+    );
+
+}
+
+
+
+function aggregatePerformance(games) {
+
+
+    const seasons = new Map();
+
+
+    let order = 0;
+
+
+
+    for (const game of games) {
+
+
+        if (
+
+            game.gameInformation?.isNationalGame
+
+        ) {
+
+            continue;
+
+        }
+
+
+
+        const general =
+
+            game.statistics?.generalStatistics ?? {};
+
+
+
+        const playing =
+
+            game.statistics?.playingTimeStatistics ?? {};
+
+
+
+        const goals =
+
+            game.statistics?.goalStatistics ?? {};
+
+
+
+        const cards =
+
+            game.statistics?.cardStatistics ?? {};
+
+
+
+        const state =
+
+            (
+
+                general.participationState ??
+
+                ""
+
+            )
+
+            .toLowerCase();
+
+
+
+        if (
+
+            state &&
+
+            !PLAYED.has(state)
+
+        ) {
+
+            continue;
+
+        }
+
+
+
+        const season =
+
+            seasonName(game);
+
+
+
+        const clubId =
+
+            getClubId(game);
+
+
+
+        if (!clubId) {
+
+            continue;
+
+        }
+
+
+
+        const key =
+
+            `${season}-${clubId}`;
+
+
+
+        if (!seasons.has(key)) {
+
+
+            seasons.set(
+
+                key,
+
+                createSeason(
+
+                    season,
+
+                    clubId,
+
+                    order++
+
+                )
+
+            );
+
+
+        }
+
+
+
+        const row =
+
+            seasons.get(key);
+
+
+
+        row.appearances += 1;
+
+
+
+        if (
+
+            playing.isStarting
+
+        ) {
+
+            row.starts++;
+
+        }
+
+
+
+        row.minutes +=
+
+            Number(
+
+                playing.playedMinutes ??
+
+                0
+
+            );
+
+
+
+        row.goals +=
+
+            Number(
+
+                goals.goalsScoredTotal ??
+
+                0
+
+            );
+
+
+
+        row.assists +=
+
+            Number(
+
+                goals.assists ??
+
+                0
+
+            );
+
+
+
+        row.yellow +=
+
+            Number(
+
+                cards.yellowCardGross ??
+
+                0
+
+            );
+
+
+
+        row.red +=
+
+            Number(
+
+                cards.redCardGross ??
+
+                0
+
+            );
+
+
+
+        row.secondYellow +=
+
+            Number(
+
+                cards.yellowRedCardGross ??
+
+                0
+
+            );
+
+
+
+    }
+
+
+
+    return Array.from(
+
+        seasons.values()
+
+    )
+
+    .sort((a, b) => {
+
+
+        if (
+
+            b.seasonSort !== a.seasonSort
+
+        ) {
+
+            return (
+
+                b.seasonSort -
+
+                a.seasonSort
+
+            );
+
+        }
+
+
+
+        return (
+
+            a.order -
+
+            b.order
+
+        );
+
+
+    })
+
+    .slice(0, 10);
+
+}
+
+
+
+export async function getTransfermarktPerformance(id) {
+
 
     if (
 
         !cache.needsRefresh(
 
-            playerId,
+            id,
 
             "transfermarkt",
 
             "performance",
 
-            TTL.PERFORMANCE
+            TTL.PLAYER
 
         )
 
     ) {
 
-        console.log(
-
-            "[TM] Performance cache:",
-
-            playerId
-
-        );
 
         return cache.getSource(
 
-            playerId,
+            id,
 
             "transfermarkt",
 
@@ -100,118 +442,50 @@ export async function getTransfermarktPerformance(playerId) {
 
     }
 
-    console.time("[TM] Performance");
 
-    const data = await getPerformance(playerId);
 
-    const games = data.performance ?? [];
+    const games =
 
-    const seasons = new Map();
+        await getPerformance(id);
 
-    for (const game of games) {
 
-        const general =
-            game.statistics?.generalStatistics ?? {};
 
-        const playing =
-            game.statistics?.playingTimeStatistics ?? {};
+    const performance =
 
-        const goals =
-            game.statistics?.goalStatistics ?? {};
+        aggregatePerformance(games);
 
-        const cards =
-            game.statistics?.cardStatistics ?? {};
 
-        const state =
-            (general.participationState || "")
-                .toLowerCase();
 
-        if (!PLAYED.has(state)) {
-            continue;
-        }
+    const clubs =
 
-        const key = seasonName(game);
+        await resolveClubs(
 
-        if (!seasons.has(key)) {
+            [
 
-            seasons.set(
+                ...new Set(
 
-                key,
+                    performance
 
-                createSeason(key)
+                        .map(row => row.clubId)
 
-            );
+                )
 
-        }
+            ]
 
-        const row = seasons.get(key);
-
-        row.clubId = String(
-            general.primaryClubId
         );
 
-        row.appearances++;
 
-        if (playing.isStarting) {
-            row.starts++;
-        }
 
-        row.minutes +=
-            playing.playedMinutes ?? 0;
+    for (const row of performance) {
 
-        row.goals +=
-            goals.goalsScoredTotal ?? 0;
-
-        row.assists +=
-            goals.assists ?? 0;
-
-        row.yellow +=
-            cards.yellowCardGross ?? 0;
-
-        row.red +=
-            cards.redCardGross ?? 0;
-
-        row.secondYellow +=
-            cards.yellowRedCardGross ?? 0;
-
-        row.goalsConceded +=
-            goals.opponentGoalsOnThePitch ?? 0;
-
-        if ((goals.opponentGoalsOnThePitch ?? 0) === 0) {
-            row.cleanSheets++;
-        }
-
-    }
-
-    console.timeEnd("[TM] Performance");
-
-    console.time("[TM] Clubs");
-
-    const rows = [...seasons.values()];
-
-    const ids = [
-
-        ...new Set(
-
-            rows
-
-                .map(r => r.clubId)
-
-                .filter(Boolean)
-
-        )
-
-    ];
-
-    const clubs = await resolveClubs(ids);
-
-    console.timeEnd("[TM] Clubs");
-
-    for (const row of rows) {
 
         row.club =
 
-            clubs.get(row.clubId) ??
+            clubs.get(
+
+                String(row.clubId)
+
+            ) ??
 
             {
 
@@ -219,27 +493,18 @@ export async function getTransfermarktPerformance(playerId) {
 
                 name: "-",
 
-                shortName: "-",
-
-                crest: null
+                shortName: "-"
 
             };
 
+
     }
 
-    const performance = rows
 
-        .sort((a, b) =>
-
-            b.season.localeCompare(a.season)
-
-        )
-
-        .slice(0, 3);
 
     cache.saveSource(
 
-        playerId,
+        id,
 
         "transfermarkt",
 
@@ -249,8 +514,12 @@ export async function getTransfermarktPerformance(playerId) {
 
     );
 
+
+
     return performance;
 
 }
+
+
 
 export default getTransfermarktPerformance;
