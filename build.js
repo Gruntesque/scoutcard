@@ -15,6 +15,7 @@ const banner = `// ==UserScript==
 // @grant        GM_addStyle
 
 // @connect      tmapi.transfermarkt.technology
+// @connect      img.a.transfermarkt.technology
 // @connect      www.transfermarkt.com
 // @connect      transfermarkt.com
 // @connect      7z0z8pasdy-dsn.algolia.net
@@ -45,6 +46,12 @@ await build({
     },
 
     target: "es2022",
+
+    loader: {
+
+        ".svg": "dataurl"
+
+    },
 
     minify: false
 

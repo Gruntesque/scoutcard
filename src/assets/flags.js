@@ -3,9 +3,7 @@
  * Country Flags
  */
 
-
 const countries = {
-
 
     "Afghanistan": "af",
     "Albania": "al",
@@ -31,7 +29,7 @@ const countries = {
 
     "Ecuador": "ec",
     "Egypt": "eg",
-    "England": "gb",
+    "England": "gb-eng",
 
     "Finland": "fi",
     "France": "fr",
@@ -60,6 +58,7 @@ const countries = {
     "Netherlands": "nl",
     "New Zealand": "nz",
     "Nigeria": "ng",
+    "Northern Ireland": "gb-nir",
     "Norway": "no",
 
     "Paraguay": "py",
@@ -71,7 +70,7 @@ const countries = {
     "Russia": "ru",
 
     "Saudi Arabia": "sa",
-    "Scotland": "gb",
+    "Scotland": "gb-sct",
     "Senegal": "sn",
     "Serbia": "rs",
     "Slovakia": "sk",
@@ -93,32 +92,19 @@ const countries = {
 
     "Venezuela": "ve",
 
-    "Wales": "gb",
+    "Wales": "gb-wls",
 
     "Curaçao": "cw",
     "Kosovo": "xk"
 
 };
 
-
-
 export default function countryToCode(name) {
 
-
     if (!name) {
-
         return "";
-
     }
 
-
-
-    return (
-
-        countries[name] ||
-
-        ""
-
-    );
+    return countries[name] || "";
 
 }

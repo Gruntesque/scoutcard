@@ -3,15 +3,13 @@
  * Transfermarkt API
  */
 
-import { getJSON } from "../../http.js";
+import http, { getJSON } from "../../http.js";
 
 const API =
     "https://tmapi.transfermarkt.technology";
 
-
 const WEB =
     "https://www.transfermarkt.com";
-
 
 export async function getPlayer(id) {
 
@@ -21,12 +19,9 @@ export async function getPlayer(id) {
 
     );
 
-
     return json.data?.[0] ?? null;
 
 }
-
-
 
 export async function getCountries() {
 
@@ -38,8 +33,6 @@ export async function getCountries() {
 
 }
 
-
-
 export async function getPerformance(id) {
 
     const json = await getJSON(
@@ -48,12 +41,9 @@ export async function getPerformance(id) {
 
     );
 
-
     return json.data?.performance ?? [];
 
 }
-
-
 
 export async function getClubs(ids) {
 
@@ -63,14 +53,11 @@ export async function getClubs(ids) {
 
     }
 
-
     const query = ids
 
         .map(id => `ids[]=${id}`)
 
         .join("&");
-
-
 
     const json = await getJSON(
 
@@ -78,7 +65,22 @@ export async function getClubs(ids) {
 
     );
 
-
     return json.data ?? [];
+
+}
+
+export async function getPlayerPage(relativeUrl) {
+
+    if (!relativeUrl) {
+
+        return null;
+
+    }
+
+    return await http.get(
+
+        `${WEB}${relativeUrl}`
+
+    );
 
 }

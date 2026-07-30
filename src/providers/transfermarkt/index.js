@@ -6,65 +6,60 @@
 import searchTransfermarkt from "./search.js";
 import getTransfermarktPlayer from "./player.js";
 import getTransfermarktPerformance from "./performance.js";
+import { getPlayerPage } from "./api.js";
+import parseTransfermarkt from "./parser.js";
 
+export async function getTransfermarktData(name){
 
-export async function getTransfermarktData(name) {
+const results =
+    await searchTransfermarkt(name);
 
-    console.time("[TM] Total");
+if(!results.length){
 
-
-    const results =
-
-        await searchTransfermarkt(name);
-
-
-    if (!results.length) {
-
-        console.timeEnd("[TM] Total");
-
-        return null;
-
-    }
-
-
-    const match = results[0];
-
-
-    console.log(
-        "[TM] Selected match:",
-        match
-    );
-
-
-    const [
-
-        profile,
-
-        performance
-
-    ] = await Promise.all([
-
-        getTransfermarktPlayer(match.id),
-
-        getTransfermarktPerformance(match.id)
-
-    ]);
-
-
-    console.timeEnd("[TM] Total");
-
-
-    return {
-
-        ...profile,
-
-        performance,
-
-        search: results
-
-    };
+    return null;
 
 }
 
+const match =
+    results[0];
+
+const profile =
+    await getTransfermarktPlayer(match.id);
+
+
+const [
+    performance,
+    html
+] = await Promise.all([
+
+    getTransfermarktPerformance(match.id),
+
+    getPlayerPage(
+        profile?.relativeUrl ??
+        match.relativeUrl
+    )
+
+]);
+
+
+const page =
+    html
+        ? parseTransfermarkt(html)
+        : {};
+
+
+return {
+
+    ...page,
+
+    ...profile,
+
+    performance,
+
+    search: results
+
+};
+
+}
 
 export default getTransfermarktData;
