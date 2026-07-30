@@ -5,6 +5,9 @@ dist/
 .idea/
 
 *.log
+*.zip
+*.jpg
+SCOUTCARD.md
 
 .DS_Store
 Thumbs.db
