@@ -8,7 +8,7 @@ const MINUTE = 60 * 1000;
 export const TTL = {
 
     PLAYER:
-        0,
+        90,
 
     PROFILE:
         0,
