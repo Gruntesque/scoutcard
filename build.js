@@ -18,6 +18,8 @@ const banner = `// ==UserScript==
 // @connect      www.transfermarkt.com
 // @connect      transfermarkt.com
 // @connect      7z0z8pasdy-dsn.algolia.net
+// @connect      img.a.transfermarkt.technology
+// @connect      flagcdn.com
 
 // @run-at       document-end
 // ==/UserScript==
