@@ -6,47 +6,9 @@
 import cache from "../../cache/index.js";
 import TTL from "../../cache/ttl.js";
 import { getPlayer, getCountries } from "./api.js";
-
-
-const POSITION_MAP = {
-
-    1: "GK",
-
-    2: "CB",
-
-    3: "LB",
-
-    4: "RB",
-
-    5: "DM",
-
-    6: "CM",
-
-    7: "CM",
-
-    8: "LM",
-
-    9: "RM",
-
-    10: "AM",
-
-    11: "LW",
-
-    12: "RW",
-
-    13: "SS",
-
-    14: "CF",
-
-    15: "ST"
-
-};
-
-
+import resolveClubs from "./clubs.js";
 
 let countriesCache = null;
-
-
 
 function formatMarketValue(details) {
 
@@ -56,29 +18,23 @@ function formatMarketValue(details) {
 
     }
 
-
     const compact =
         details.current.compact;
-
 
     return `${compact.prefix}${compact.content}${compact.suffix}`;
 
 }
-
-
 
 function getNationalities(player) {
 
     const ids =
         player?.nationalityDetails?.nationalities;
 
-
     if (!ids) {
 
         return [];
 
     }
-
 
     return [
 
@@ -90,8 +46,6 @@ function getNationalities(player) {
 
 }
 
-
-
 async function getCountryMap() {
 
     if (countriesCache) {
@@ -100,14 +54,10 @@ async function getCountryMap() {
 
     }
 
-
     const countries =
         await getCountries();
 
-
-
     countriesCache = {};
-
 
     countries.forEach(country => {
 
@@ -116,18 +66,14 @@ async function getCountryMap() {
 
     });
 
-
     return countriesCache;
 
 }
-
-
 
 async function getNationalityName(player) {
 
     const nationalities =
         getNationalities(player);
-
 
     if (!nationalities.length) {
 
@@ -135,11 +81,8 @@ async function getNationalityName(player) {
 
     }
 
-
     const countries =
         await getCountryMap();
-
-
 
     return (
 
@@ -152,8 +95,6 @@ async function getNationalityName(player) {
     );
 
 }
-
-
 
 function getPositions(attributes) {
 
@@ -174,25 +115,17 @@ function getPositions(attributes) {
         id:
             position.id ?? null,
 
-
         name:
-            POSITION_MAP[position.id] ??
-            position.name ??
-            "",
-
+            position.name ?? "",
 
         shortName:
-            POSITION_MAP[position.id] ??
-            position.shortName ??
-            ""
+            position.shortName ?? ""
 
     }));
 
 }
 
-
-
-function getCurrentClub(player) {
+function getCurrentClubAssignment(player) {
 
     return (
 
@@ -210,13 +143,10 @@ function getCurrentClub(player) {
 
 }
 
-
-
 function getCaptainStatus(player) {
 
     const currentClub =
-        getCurrentClub(player);
-
+        getCurrentClubAssignment(player);
 
     return Boolean(
 
@@ -236,8 +166,6 @@ function getCaptainStatus(player) {
 
 }
 
-
-
 function getNationalTeam(player) {
 
     const team =
@@ -250,13 +178,11 @@ function getNationalTeam(player) {
 
         null;
 
-
     if (!team) {
 
         return null;
 
     }
-
 
     return {
 
@@ -266,22 +192,18 @@ function getNationalTeam(player) {
             team.matches ??
             null,
 
-
         goals:
             team.goals ??
             team.goalsScored ??
             null,
 
-
         assists:
             team.assists ??
             null,
 
-
         goalsConceded:
             team.goalsConceded ??
             null,
-
 
         cleanSheets:
             team.cleanSheets ??
@@ -291,10 +213,7 @@ function getNationalTeam(player) {
 
 }
 
-
-
 export async function getTransfermarktPlayer(id) {
-
 
     if (
 
@@ -312,16 +231,6 @@ export async function getTransfermarktPlayer(id) {
 
     ) {
 
-
-        console.log(
-
-            "[TM] Profile cache:",
-
-            id
-
-        );
-
-
         return cache.getSource(
 
             id,
@@ -334,60 +243,68 @@ export async function getTransfermarktPlayer(id) {
 
     }
 
-
-
     const player =
         await getPlayer(id);
-
-
 
     const attributes =
         player.attributes ?? {};
 
+    const assignment =
+        getCurrentClubAssignment(player);
 
+    const clubs =
+        await resolveClubs([
+
+            assignment?.clubId
+
+        ]);
+
+    const currentClub =
+        clubs.get(
+
+            String(assignment?.clubId)
+
+        ) ??
+
+        null;
+
+    const ribbonType =
+        player.ribbon?.ribbonType ?? null;
 
     const profile = {
-
 
         id:
             Number(player.id),
 
-
         name:
             player.name,
-
 
         shortName:
             player.shortName,
 
-
         url:
             `https://www.transfermarkt.com${player.relativeUrl}`,
 
+        relativeUrl:
+            player.relativeUrl,
 
         photo:
             player.portraitUrl,
 
-
         age:
             player.lifeDates?.age ?? null,
-
 
         birthDate:
             player.lifeDates?.dateOfBirth ?? null,
 
-
         height:
             attributes.height ?? null,
-
 
         foot:
             attributes.preferredFoot?.name ?? null,
 
-
         contractUntil:
             attributes.contractUntil ?? null,
-
 
         marketValue:
             formatMarketValue(
@@ -396,57 +313,47 @@ export async function getTransfermarktPlayer(id) {
 
             ),
 
-
         marketValueValue:
             player.marketValueDetails?.current?.value ?? null,
-
 
         marketValueUpdated:
             player.marketValueDetails?.current?.determined ?? null,
 
-
         highestMarketValue:
             player.marketValueDetails?.highest?.value ?? null,
-
 
         nationalities:
             getNationalities(player),
 
-
         nationalityName:
             await getNationalityName(player),
-
 
         isCaptain:
             getCaptainStatus(player),
 
-
         nationalTeam:
             getNationalTeam(player),
-
 
         positionGroup:
             attributes.positionGroup ?? null,
 
-
         positionGroupName:
             attributes.positionGroupName ?? null,
-
 
         positions:
             getPositions(attributes),
 
+        currentClub,
 
-        currentClub:
-            getCurrentClub(player),
+        ribbonType,
 
+        loan:
+            ribbonType === "ON_LOAN",
 
         raw:
             player
 
     };
-
-
 
     cache.saveSource(
 
@@ -460,10 +367,8 @@ export async function getTransfermarktPlayer(id) {
 
     );
 
-
     return profile;
 
 }
-
 
 export default getTransfermarktPlayer;

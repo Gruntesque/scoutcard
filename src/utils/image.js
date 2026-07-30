@@ -3,13 +3,9 @@
  * Image Loader
  */
 
-
 const imageCache = new Map();
 
-
-
 export async function loadExternalImage(url) {
-
 
     if (!url) {
 
@@ -17,7 +13,12 @@ export async function loadExternalImage(url) {
 
     }
 
+    // Data URIs (ex.: placeholder SVG) não precisam ser baixadas.
+    if (url.startsWith("data:")) {
 
+        return url;
+
+    }
 
     if (
 
@@ -29,10 +30,7 @@ export async function loadExternalImage(url) {
 
     }
 
-
-
     return new Promise(resolve => {
-
 
         GM_xmlhttpRequest({
 
@@ -44,12 +42,9 @@ export async function loadExternalImage(url) {
 
             anonymous: true,
 
-
             onload(response) {
 
-
                 try {
-
 
                     const blobUrl =
 
@@ -59,8 +54,6 @@ export async function loadExternalImage(url) {
 
                         );
 
-
-
                     imageCache.set(
 
                         url,
@@ -69,19 +62,15 @@ export async function loadExternalImage(url) {
 
                     );
 
-
-
                     resolve(
 
                         blobUrl
 
                     );
 
-
                 }
 
                 catch(error) {
-
 
                     console.warn(
 
@@ -91,17 +80,13 @@ export async function loadExternalImage(url) {
 
                     );
 
-
                     resolve("");
 
                 }
 
-
             },
 
-
             onerror(error) {
-
 
                 console.warn(
 
@@ -111,20 +96,14 @@ export async function loadExternalImage(url) {
 
                 );
 
-
                 resolve("");
 
             }
 
-
         });
-
 
     });
 
-
 }
-
-
 
 export default loadExternalImage;
