@@ -3,7 +3,10 @@
  * Player Assets
  */
 
-import { loadExternalImage } from "../utils/image.js";
+import {
+    loadExternalImage,
+    loadExternalImageAsset
+} from "../utils/image.js";
 import countryToCode from "./flags.js";
 
 const playerPlaceholder = URL.createObjectURL(
@@ -27,16 +30,20 @@ export async function preparePlayerAssets(player) {
     let photo =
         tm.photo || "";
 
+    let photoBackground = "transparent";
+    let photoBackgroundColor = "";
     let isPlaceholder = false;
 
     if (photo) {
 
-        const blobPhoto =
-            await loadExternalImage(photo);
+        const asset =
+            await loadExternalImageAsset(photo);
 
-        if (blobPhoto) {
+        if (asset.url) {
 
-            photo = blobPhoto;
+            photo = asset.url;
+            photoBackground = asset.background;
+            photoBackgroundColor = asset.color;
 
         } else {
 
@@ -63,7 +70,7 @@ export async function preparePlayerAssets(player) {
 
             flag =
                 await loadExternalImage(
-                    `https://flagcdn.com/20x15/${code}.png`
+                    `https://flagcdn.com/40x30/${code}.png`
                 );
 
         }
@@ -77,6 +84,10 @@ export async function preparePlayerAssets(player) {
             ...tm,
 
             photo,
+
+            photoBackground,
+
+            photoBackgroundColor,
 
             flag,
 

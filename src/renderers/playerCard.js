@@ -44,14 +44,14 @@ ${renderPerformanceTable(player)}
 <style>
 
 
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700&family=Sora:wght@300;400;500;600;700&display=swap');
 
 
 
 .scoutcard,
 .scoutcard * {
 
-font-family:Roboto, Arial, sans-serif !important;
+font-family:Sora,"Noto Sans","Segoe UI Symbol","Apple Symbols",sans-serif !important;
 
 }
 

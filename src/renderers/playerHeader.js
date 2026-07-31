@@ -4,6 +4,7 @@
  */
 
 import styles from "./playerHeaderStyles.js";
+import playerHeaderPhoto from "./playerHeaderPhoto.js";
 import { injuryBlock, loanBlock } from "./playerHeaderAlerts.js";
 import {
     captainIcon,
@@ -30,14 +31,7 @@ export default function renderPlayerHeader(player) {
 
 <div class="scoutcard-header">
 
-<div class="scoutcard-photo">
-
-<img
-class="scoutcard-photo-img${tm.isPlaceholder ? " scoutcard-placeholder" : ""}"
-src="${tm.photo || ""}"
->
-
-</div>
+${playerHeaderPhoto(tm)}
 
 
 <div class="scoutcard-main">

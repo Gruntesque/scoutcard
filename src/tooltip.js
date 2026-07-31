@@ -54,7 +54,7 @@ export default class Tooltip {
                     "12px 14px",
 
                 fontFamily:
-                    "Roboto, Arial, sans-serif",
+                    "Sora, Noto Sans, Segoe UI Symbol, Apple Symbols, sans-serif",
 
                 fontSize:
                     "13px",
@@ -126,7 +126,7 @@ export default class Tooltip {
 
         font.href =
 
-            "https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap";
+            "https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700&family=Sora:wght@300;400;500;600;700&display=swap";
 
 
         document.head.appendChild(font);
@@ -168,7 +168,7 @@ export default class Tooltip {
 
     box-sizing:border-box;
 
-    font-family:"Roboto",Arial,sans-serif !important;
+    font-family:Sora,"Noto Sans","Segoe UI Symbol","Apple Symbols",sans-serif !important;
 
 }
 
